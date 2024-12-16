@@ -499,30 +499,47 @@ lazy.setup({
 					end,
 				},
 			},
+			{
+				"kdheepak/lazygit.nvim",
+				lazy = true,
+				cmd = {
+					"LazyGit",
+					"LazyGitConfig",
+					"LazyGitCurrentFile",
+					"LazyGitFilter",
+					"LazyGitFilterCurrentFile",
+				},
+				dependencies = { "nvim-lua/plenary.nvim" },
+				keys = {
+					{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "[L]azy git" },
+				},
+			},
 		},
 
 		-- languages
 		{
 			-- go
-			"ray-x/go.nvim",
-			dependencies = { "ray-x/guihua.lua" },
-			config = function()
-				require("go").setup()
-			end,
-			event = { "CmdlineEnter" },
-			ft = { "go", "gomod" },
-			build = ':lua require("go.install").update_all_sync()',
-		},
-		{
+			{
+				"ray-x/go.nvim",
+				dependencies = { "ray-x/guihua.lua" },
+				config = function()
+					require("go").setup({})
+				end,
+				event = { "CmdlineEnter" },
+				ft = { "go", "gomod" },
+				build = ':lua require("go.install").update_all_sync()',
+			},
 			-- rust
-			"saecki/crates.nvim",
-			event = { "BufRead Cargo.toml" },
-			ft = { "toml" },
-			config = function(_, opts)
-				local crates = require("crates")
-				crates.setup(opts)
-				crates.show()
-			end,
+			{
+				"saecki/crates.nvim",
+				event = { "BufRead Cargo.toml" },
+				ft = { "toml" },
+				config = function(_, opts)
+					local crates = require("crates")
+					crates.setup(opts)
+					crates.show()
+				end,
+			},
 		},
 
 		-- leap
@@ -966,12 +983,18 @@ lazy.setup({
 					"diff",
 					"go",
 					"html",
+					"json",
+					"javascript",
 					"lua",
 					"luadoc",
 					"markdown",
 					"markdown_inline",
 					"python",
 					"query",
+					"rust",
+					"toml",
+					"typescript",
+					"yaml",
 					"vim",
 					"vimdoc",
 				},
