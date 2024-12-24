@@ -33,7 +33,7 @@ vim.o.cursorline = true
 vim.o.signcolumn = "yes:1"
 
 -- tab width
-local tab = 4
+local tab = 2
 
 vim.o.tabstop = tab
 vim.o.softtabstop = tab

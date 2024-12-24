@@ -31,64 +31,9 @@ lazy.setup({
 			event = "VeryLazy",
 			lazy = false,
 			version = false,
-			build = "make",
-			dependencies = {
-				"nvim-treesitter/nvim-treesitter",
-				"stevearc/dressing.nvim",
-				"nvim-lua/plenary.nvim",
-				"MunifTanjim/nui.nvim",
-				"nvim-tree/nvim-web-devicons",
-				{
-					"zbirenbaum/copilot.lua",
-					cmd = "Copilot",
-					event = "InsertEnter",
-					config = function()
-						require("copilot").setup({
-							suggestion = {
-								enabled = true,
-								auto_trigger = true,
-								hide_during_completion = false,
-								debounce = 75,
-								keymap = {
-									accept = "<Tab>",
-									accept_word = false,
-									accept_line = false,
-									next = "<M-]>",
-									prev = "<M-[>",
-								},
-							},
-						})
-					end,
-				},
-				{
-					"HakonHarnes/img-clip.nvim",
-					event = "VeryLazy",
-					opts = {
-						default = {
-							embed_image_as_base64 = false,
-							prompt_for_file_name = false,
-							drag_and_drop = {
-								insert_mode = true,
-							},
-							-- required for Windows users
-							use_absolute_path = true,
-						},
-					},
-				},
-				{
-					"MeanderingProgrammer/render-markdown.nvim",
-					opts = {
-						file_types = { "markdown", "Avante" },
-					},
-					ft = { "markdown", "Avante" },
-				},
-			},
 			opts = {
 				provider = "copilot",
-				auto_suggestions_provider = "copilot",
 				mappings = {
-					ask = "<leader>cc",
-					clear_history = "<leader>ch",
 					diff = {
 						ours = "co",
 						theirs = "ct",
@@ -119,13 +64,55 @@ lazy.setup({
 						reverse_switch_windows = "<S-Tab>",
 					},
 				},
-				windows = {
-					position = "left",
-					sidebar_header = {
-						enabled = false,
+				hints = { enabled = true },
+			},
+			build = "make",
+			dependencies = {
+				"stevearc/dressing.nvim",
+				"nvim-lua/plenary.nvim",
+				"MunifTanjim/nui.nvim",
+				"hrsh7th/nvim-cmp",
+				"nvim-tree/nvim-web-devicons",
+				{
+					"zbirenbaum/copilot.lua",
+					cmd = "Copilot",
+					event = "InsertEnter",
+					config = function()
+						require("copilot").setup({
+							suggestion = {
+								enabled = true,
+								auto_trigger = true,
+								hide_during_completion = false,
+								keymap = {
+									accept = "<TAB>",
+								},
+							},
+						})
+					end,
+				},
+				{
+					"HakonHarnes/img-clip.nvim",
+					event = "VeryLazy",
+					opts = {
+						default = {
+							embed_image_as_base64 = false,
+							prompt_for_file_name = false,
+							drag_and_drop = {
+								insert_mode = true,
+							},
+							-- required for Windows users
+							use_absolute_path = true,
+						},
 					},
 				},
-				hints = { enabled = true },
+				{
+					-- Make sure to set this up properly if you have lazy=true
+					"MeanderingProgrammer/render-markdown.nvim",
+					opts = {
+						file_types = { "markdown", "Avante" },
+					},
+					ft = { "markdown", "Avante" },
+				},
 			},
 		},
 
@@ -148,13 +135,13 @@ lazy.setup({
 			dependencies = {
 				{
 					"L3MON4D3/LuaSnip",
+					dependencies = { "rafamadriz/friendly-snippets" },
 					build = (function()
 						if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
 							return
 						end
 						return "make install_jsregexp"
 					end)(),
-					dependencies = {},
 				},
 				"saadparwaiz1/cmp_luasnip",
 
@@ -162,8 +149,11 @@ lazy.setup({
 				"hrsh7th/cmp-path",
 			},
 			config = function()
+				require("luasnip.loaders.from_vscode").lazy_load()
+
 				local cmp = require("cmp")
 				local luasnip = require("luasnip")
+
 				luasnip.config.setup({})
 
 				cmp.setup({
@@ -313,6 +303,7 @@ lazy.setup({
 				"williamboman/mason.nvim",
 				"jay-babu/mason-nvim-dap.nvim",
 
+				-- go
 				{
 					"leoluz/nvim-dap-go",
 					ft = "go",
@@ -417,10 +408,83 @@ lazy.setup({
 
 					handlers = {},
 
-					ensure_installed = { "delve" },
+					ensure_installed = { "delve", "codelldb" },
 				})
 
 				dapui.setup()
+
+				if not dap.adapters then
+					dap.adapters = {}
+				end
+
+				-- rust
+				dap.adapters["probe-rs-debug"] = {
+					type = "server",
+					port = "${port}",
+					executable = {
+						command = vim.fn.expand("$HOME/.cargo/bin/probe-rs"),
+						args = { "dap-server", "--port", "${port}" },
+					},
+				}
+				require("dap.ext.vscode").type_to_filetypes["probe-rs-debug"] = { "rust" }
+				dap.listeners.before["event_probe-rs-rtt-channel-config"]["plugins.nvim-dap-probe-rs"] = function(
+					session,
+					body
+				)
+					local utils = require("dap.utils")
+					utils.notify(
+						string.format(
+							'probe-rs: Opening RTT channel %d with name "%s"!',
+							body.channelNumber,
+							body.channelName
+						)
+					)
+					local file = io.open("probe-rs.log", "a")
+					if file then
+						file:write(
+							string.format(
+								'%s: Opening RTT channel %d with name "%s"!\n',
+								os.date("%Y-%m-%d-T%H:%M:%S"),
+								body.channelNumber,
+								body.channelName
+							)
+						)
+					end
+					if file then
+						file:close()
+					end
+					session:request("rttWindowOpened", { body.channelNumber, true })
+				end
+				dap.listeners.before["event_probe-rs-rtt-data"]["plugins.nvim-dap-probe-rs"] = function(_, body)
+					local message = string.format(
+						"%s: RTT-Channel %d - Message: %s",
+						os.date("%Y-%m-%d-T%H:%M:%S"),
+						body.channelNumber,
+						body.data
+					)
+					local repl = require("dap.repl")
+					repl.append(message)
+					local file = io.open("probe-rs.log", "a")
+					if file then
+						file:write(message)
+					end
+					if file then
+						file:close()
+					end
+				end
+				dap.listeners.before["event_probe-rs-show-message"]["plugins.nvim-dap-probe-rs"] = function(_, body)
+					local message =
+						string.format("%s: probe-rs message: %s", os.date("%Y-%m-%d-T%H:%M:%S"), body.message)
+					local repl = require("dap.repl")
+					repl.append(message)
+					local file = io.open("probe-rs.log", "a")
+					if file then
+						file:write(message)
+					end
+					if file then
+						file:close()
+					end
+				end
 
 				dap.listeners.after.event_initialized["dapui_config"] = dapui.open
 				dap.listeners.before.event_terminated["dapui_config"] = dapui.close
@@ -460,8 +524,9 @@ lazy.setup({
 				end,
 				formatters_by_ft = {
 					lua = { "stylua" },
-					go = { "goimports" },
+					go = { "goimports", "gofumpt" },
 					python = { "black" },
+					typescript = { "prettier" },
 				},
 			},
 		},
@@ -529,16 +594,65 @@ lazy.setup({
 				ft = { "go", "gomod" },
 				build = ':lua require("go.install").update_all_sync()',
 			},
+
 			-- rust
 			{
 				"saecki/crates.nvim",
 				event = { "BufRead Cargo.toml" },
-				ft = { "toml" },
-				config = function(_, opts)
-					local crates = require("crates")
-					crates.setup(opts)
-					crates.show()
+				opts = {
+					completion = {
+						crates = {
+							enabled = true,
+						},
+					},
+					lsp = {
+						enabled = true,
+						actions = true,
+						completion = true,
+						hover = true,
+					},
+				},
+			},
+
+			-- css
+			{
+				"norcalli/nvim-colorizer.lua",
+				event = { "BufRead" },
+				ft = { "css", "scss", "less" },
+				config = function()
+					require("colorizer").setup()
 				end,
+			},
+
+			-- c/c++
+			{
+				"p00f/clangd_extensions.nvim",
+				lazy = true,
+				config = function() end,
+				opts = {
+					inlay_hints = {
+						inline = false,
+					},
+					ast = {
+						role_icons = {
+							type = "",
+							declaration = "",
+							expression = "",
+							specifier = "",
+							statement = "",
+							["template argument"] = "",
+						},
+						kind_icons = {
+							Compound = "",
+							Recovery = "",
+							TranslationUnit = "",
+							PackExpansion = "",
+							TemplateTypeParm = "",
+							TemplateTemplateParm = "",
+							TemplateParamObject = "",
+						},
+					},
+				},
 			},
 		},
 
@@ -629,7 +743,7 @@ lazy.setup({
 			},
 			config = function()
 				vim.api.nvim_create_autocmd("LspAttach", {
-					group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
+					group = vim.api.nvim_create_augroup("mothzarella-lsp-attach", { clear = true }),
 					callback = function(event)
 						local map = function(keys, func, desc, mode)
 							mode = mode or "n"
@@ -637,10 +751,28 @@ lazy.setup({
 						end
 
 						-- remap
+						map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
+
+						map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
+
+						map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
+
+						map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
+
+						map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
+
+						map(
+							"<leader>ws",
+							require("telescope.builtin").lsp_dynamic_workspace_symbols,
+							"[W]orkspace [S]ymbols"
+						)
+
 						map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
 
 						map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
 
+						-- WARN: This is not Goto Definition, this is Goto Declaration.
+						--  For example, in C this would take you to the header.
 						map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 
 						local client = vim.lsp.get_client_by_id(event.data.client_id)
@@ -648,7 +780,7 @@ lazy.setup({
 							client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight)
 						then
 							local highlight_augroup =
-								vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+								vim.api.nvim_create_augroup("mothzarella-lsp-highlight", { clear = false })
 							vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 								buffer = event.buf,
 								group = highlight_augroup,
@@ -662,11 +794,11 @@ lazy.setup({
 							})
 
 							vim.api.nvim_create_autocmd("LspDetach", {
-								group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
+								group = vim.api.nvim_create_augroup("mothzarella-lsp-detach", { clear = true }),
 								callback = function(event2)
 									vim.lsp.buf.clear_references()
 									vim.api.nvim_clear_autocmds({
-										group = "kickstart-lsp-highlight",
+										group = "mothzarella-lsp-highlight",
 										buffer = event2.buf,
 									})
 								end,
@@ -690,7 +822,7 @@ lazy.setup({
 					vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 
 				local servers = {
-					-- lua
+					-- lua ( require man-db on aur repo )
 					lua_ls = {
 						settings = {
 							Lua = {
@@ -710,11 +842,11 @@ lazy.setup({
 						settings = {
 							gopls = {
 								analyses = {
-									unusedparams = true, -- unused params
+									unusedparams = true,
 								},
-								completeUnimported = true, -- autocomplete unimported packages
-								usePlaceholders = true, -- use placeholders for function parameters
-								staticcheck = true, -- staticcheck linter support
+								completeUnimported = true,
+								usePlaceholders = true,
+								staticcheck = true,
 								hints = {
 									assignVariableTypes = true,
 									compositeLiteralFields = true,
@@ -779,6 +911,61 @@ lazy.setup({
 							},
 						},
 					},
+
+					-- typescript / javascript
+					ts_ls = {
+						filetypes = {
+							"javascript",
+							"javascriptreact",
+							"javascript.jsx",
+							"typescript",
+							"typescriptreact",
+							"typescript.tsx",
+						},
+						single_file_support = true,
+						init_options = {
+							preferences = {
+								includeInlayParameterNameHints = "all",
+								includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+								includeInlayFunctionParameterTypeHints = true,
+								includeInlayVariableTypeHints = true,
+								includeInlayPropertyDeclarationTypeHints = true,
+								includeInlayFunctionLikeReturnTypeHints = true,
+								includeInlayEnumMemberValueHints = true,
+								importModuleSpecifierPreference = "non-relative",
+							},
+						},
+					},
+
+					-- tailwindcss
+					tailwindcss = {
+						settings = {
+							tailwindCSS = {
+								lint = {
+									enabled = true,
+								},
+							},
+						},
+					},
+
+					-- css / scss / less
+					cssls = {
+						filetypes = { "css", "scss", "less" },
+						settings = {
+							css = { validate = true },
+							less = { validate = true },
+							scss = { validate = true },
+						},
+					},
+
+					-- c/c++
+					clangd = {
+						cmd = {
+							"clangd",
+							"--fallback-style=webkit",
+						},
+						filetypes = { "c", "cpp" },
+					},
 				}
 
 				require("mason").setup()
@@ -789,9 +976,11 @@ lazy.setup({
 					"stylua", -- require unzip
 					"goimports",
 					"black",
+					"prettier",
 
 					-- DAP
 					"delve",
+					"codelldb",
 				})
 				require("mason-tool-installer").setup({
 					ensure_installed = ensure_installed,
@@ -963,12 +1152,23 @@ lazy.setup({
 			end,
 		},
 
-		-- todo (comments)
+		-- comments
 		{
-			"folke/todo-comments.nvim",
-			event = "VimEnter",
-			dependencies = { "nvim-lua/plenary.nvim" },
-			opts = true,
+			-- todo
+			{
+				"folke/todo-comments.nvim",
+				event = "VimEnter",
+				dependencies = { "nvim-lua/plenary.nvim" },
+				opts = true,
+			},
+
+			-- ts-comments (overwrites native comments)
+			{
+				"folke/ts-comments.nvim",
+				opts = {},
+				event = "VeryLazy",
+				enabled = vim.fn.has("nvim-0.10.0") == 1,
+			},
 		},
 
 		-- treesitter
