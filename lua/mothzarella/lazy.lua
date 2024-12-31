@@ -33,7 +33,10 @@ lazy.setup({
 			version = false,
 			opts = {
 				provider = "copilot",
+				auto_suggestions_provider = "copilot",
 				mappings = {
+					ask = "<leader>cc",
+					clear_history = "<leader>ch",
 					diff = {
 						ours = "co",
 						theirs = "ct",
@@ -65,6 +68,7 @@ lazy.setup({
 					},
 				},
 				hints = { enabled = true },
+				windows = { position = "left" },
 			},
 			build = "make",
 			dependencies = {
