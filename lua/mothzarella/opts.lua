@@ -18,7 +18,7 @@ vim.o.breakindent = true
 vim.o.undofile = true
 
 -- displays which-key popup sooner
-vim.o.timeoutlen = 750
+vim.o.timeoutlen = 750 -- TODO:
 
 -- splits layout
 vim.o.splitright = true
@@ -48,9 +48,6 @@ vim.o.fillchars = "vert:│"
 
 -- status line always visible
 vim.o.laststatus = 3
-
--- netrw remove bannerURL
-vim.g.netrw_banner = 0
 
 -- diagnostics
 vim.diagnostic.config({
