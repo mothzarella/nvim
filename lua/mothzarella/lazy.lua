@@ -503,6 +503,14 @@ lazy.setup({
 					},
 				},
 			},
+
+			-- html
+
+			{
+				"windwp/nvim-ts-autotag",
+				event = { "InsertEnter" },
+				opts = {},
+			},
 		},
 
 		-- leap
