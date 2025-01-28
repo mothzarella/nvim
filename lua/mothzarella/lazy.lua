@@ -1,3 +1,5 @@
+vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46_cache/"
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
 if not (vim.uv or vim.noop).fs_stat(lazypath) then
@@ -31,69 +33,39 @@ lazy.setup({
 			event = "VeryLazy",
 			lazy = false,
 			version = false,
+			keys = {
+				{
+					"<leader>cc",
+					function()
+						require("avante").toggle()
+					end,
+					desc = "Toggle Avante",
+				},
+			},
 			opts = {
 				provider = "copilot",
 				auto_suggestions_provider = "copilot",
-				mappings = {
-					ask = "<leader>cc",
-					clear_history = "<leader>ch",
-					diff = {
-						ours = "co",
-						theirs = "ct",
-						all_theirs = "ca",
-						both = "cb",
-						cursor = "cc",
-						next = "]x",
-						prev = "[x",
-					},
-					suggestion = {
-						accept = "<M-l>",
-						next = "<M-]>",
-						prev = "<M-[>",
-						dismiss = "<C-]>",
-					},
-					jump = {
-						next = "]]",
-						prev = "[[",
-					},
-					submit = {
-						normal = "<CR>",
-						insert = "<C-s>",
-					},
-					sidebar = {
-						apply_all = "A",
-						apply_cursor = "a",
-						switch_windows = "<Tab>",
-						reverse_switch_windows = "<S-Tab>",
-					},
-				},
-				hints = { enabled = true },
 				windows = { position = "left" },
+			},
+			behaviour = {
+				auto_suggestions = true,
+				auto_set_highlight_group = true,
+				auto_set_keymaps = true,
+				auto_apply_diff_after_generation = false,
+				support_paste_from_clipboard = false,
+				minimize_diff = true,
 			},
 			build = "make",
 			dependencies = {
 				"stevearc/dressing.nvim",
 				"nvim-lua/plenary.nvim",
 				"MunifTanjim/nui.nvim",
+				"echasnovski/mini.pick",
+				"nvim-telescope/telescope.nvim",
 				"hrsh7th/nvim-cmp",
+				"ibhagwan/fzf-lua",
 				"nvim-tree/nvim-web-devicons",
-				{
-					"zbirenbaum/copilot.lua",
-					cmd = "Copilot",
-					event = "InsertEnter",
-					config = function()
-						require("copilot").setup({
-							suggestion = {
-								enabled = true,
-								auto_trigger = true,
-								hide_during_completion = false,
-								keymap = {
-									accept = "<TAB>",
-								},
-							},
-						})
-					end,
-				},
+				"github/copilot.vim",
 				{
 					"HakonHarnes/img-clip.nvim",
 					event = "VeryLazy",
@@ -104,13 +76,11 @@ lazy.setup({
 							drag_and_drop = {
 								insert_mode = true,
 							},
-							-- required for Windows users
 							use_absolute_path = true,
 						},
 					},
 				},
 				{
-					-- Make sure to set this up properly if you have lazy=true
 					"MeanderingProgrammer/render-markdown.nvim",
 					opts = {
 						file_types = { "markdown", "Avante" },
@@ -126,10 +96,13 @@ lazy.setup({
 			name = "barbecue",
 			version = "*",
 			dependencies = { "SmiteshP/nvim-navic" },
-			opts = {
-				show_dirname = false,
-				exclude_filetypes = {},
-			},
+			config = function()
+				require("barbecue").setup({
+					exclude_filetypes = {},
+					show_dirname = false,
+					show_basename = false,
+				})
+			end,
 		},
 
 		-- CMP
@@ -149,18 +122,21 @@ lazy.setup({
 				},
 				"saadparwaiz1/cmp_luasnip",
 
+				"windwp/nvim-autopairs",
 				"hrsh7th/cmp-nvim-lsp",
 				"hrsh7th/cmp-path",
 			},
 			config = function()
 				require("luasnip.loaders.from_vscode").lazy_load()
+				require("nvim-autopairs").setup({})
 
 				local cmp = require("cmp")
+				local cmp_autopairs = require("nvim-autopairs.completion.cmp")
 				local luasnip = require("luasnip")
 
 				luasnip.config.setup({})
 
-				cmp.setup({
+				local options = {
 					snippet = {
 						expand = function(args)
 							luasnip.lsp_expand(args.body)
@@ -168,6 +144,7 @@ lazy.setup({
 					},
 					completion = { completeopt = "menu,menuone,noinsert" },
 					mapping = cmp.mapping.preset.insert({
+
 						-- completion
 						["<C-n>"] = cmp.mapping.select_next_item(),
 						["<C-p>"] = cmp.mapping.select_prev_item(),
@@ -204,96 +181,32 @@ lazy.setup({
 						{ name = "luasnip" },
 						{ name = "path" },
 					},
-				})
+				}
+
+				options = vim.tbl_deep_extend("force", options, require("nvchad.cmp"))
+
+				cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+				cmp.setup(options)
 			end,
 		},
 
-		-- colorscheme
+		-- comments
 		{
-			"catppuccin/nvim",
-			name = "catppuccin",
-			lazy = false,
-			priority = 1000,
-			dependencies = {
-				{
-					"xiyaowong/nvim-transparent",
-					lazy = false,
-					opts = {
-						enable = true,
-						groups = {
-							"Normal",
-							"NormalNC",
-							"Comment",
-							"Constant",
-							"Special",
-							"Identifier",
-							"Statement",
-							"PreProc",
-							"Type",
-							"Underlined",
-							"Todo",
-							"String",
-							"Function",
-							"Conditional",
-							"Repeat",
-							"Operator",
-							"Structure",
-							"LineNr",
-							"NonText",
-							"SignColumn",
-							"CursorLine",
-							"CursorLineNr",
-							"StatusLine",
-							"StatusLineNC",
-							"EndOfBuffer",
-						},
-						extra_groups = {
-							"TroubleNormal",
-							"TroubleNormalNC",
-						},
-					},
-				},
+			-- todo
+			{
+				"folke/todo-comments.nvim",
+				event = "VimEnter",
+				dependencies = { "nvim-lua/plenary.nvim" },
+				opts = true,
 			},
-			config = function()
-				require("catppuccin").setup({
-					flavour = "mocha",
-					no_italic = true,
-					term_colors = true,
-				})
-				local mocha = require("catppuccin.palettes").get_palette("mocha")
-				local transparent = require("transparent")
 
-				vim.cmd([[colorscheme catppuccin]])
-
-				-- splits
-				vim.api.nvim_set_hl(0, "WinSeparator", { fg = mocha.surface0 })
-
-				-- telescope
-				vim.api.nvim_set_hl(0, "TelescopeBorder", { fg = mocha.lavender })
-
-				-- cmp and lsp highlight
-				vim.api.nvim_set_hl(0, "NormalFloat", { bg = mocha.mantle })
-				vim.api.nvim_set_hl(0, "CmpNormal", { bg = mocha.mantle })
-				vim.api.nvim_set_hl(0, "Pmenu", { bg = mocha.mantle })
-				vim.api.nvim_set_hl(0, "PmenuThumb", { bg = mocha.mantle })
-
-				-- cursor
-				vim.api.nvim_set_hl(0, "CursorLineNr", { fg = mocha.lavender })
-				vim.api.nvim_set_hl(0, "Cursor", { bg = mocha.lavender })
-				vim.opt.guicursor = {
-					"n-v-c:block-Cursor/lCursor", -- normale, visual, command
-					"i-ci-ve:ver25-Cursor/lCursor", -- insert
-					"r-cr:hor20-Cursor/lCursor", -- replace
-					"o:hor50-Cursor/lCursor", -- pending
-				}
-
-				-- transparent
-				transparent.clear_prefix("Telescope")
-				local lines = { "lualine_c", "lualine_x", "lualine_y" }
-				for _, line in ipairs(lines) do
-					transparent.clear_prefix(line)
-				end
-			end,
+			-- ts-comments (overwrites native comments)
+			{
+				"folke/ts-comments.nvim",
+				opts = {},
+				event = "VeryLazy",
+				enabled = vim.fn.has("nvim-0.10.0") == 1,
+			},
 		},
 
 		-- DAP
@@ -301,49 +214,11 @@ lazy.setup({
 			"mfussenegger/nvim-dap",
 			dependencies = {
 				"rcarriga/nvim-dap-ui",
-
 				"nvim-neotest/nvim-nio",
-
 				"williamboman/mason.nvim",
 				"jay-babu/mason-nvim-dap.nvim",
 
-				-- go
-				{
-					"leoluz/nvim-dap-go",
-					ft = "go",
-					opts = {
-						dap_configurations = {
-							{
-								type = "go",
-								name = "Debug Package",
-								request = "launch",
-								program = "${fileDirname}",
-							},
-							{
-								type = "go",
-								name = "Debug Test",
-								request = "launch",
-								mode = "test",
-								program = "${fileDirname}",
-							},
-							{
-								type = "go",
-								name = "Debug Test (go.mod)",
-								request = "launch",
-								mode = "test",
-								program = "./${relativeFileDirname}",
-							},
-						},
-						delve = {
-							detached = vim.fn.has("win32") == 0,
-							port = "${port}",
-						},
-						dap_configurations_for_go = true,
-						tests = {
-							args = { "-test.v" },
-						},
-					},
-				},
+				{ "leoluz/nvim-dap-go", ft = "go" },
 			},
 			keys = {
 				{
@@ -354,21 +229,21 @@ lazy.setup({
 					desc = "Debug: Start/Continue",
 				},
 				{
-					"<F6>",
+					"<F1>",
 					function()
 						require("dap").step_into()
 					end,
 					desc = "Debug: Step Into",
 				},
 				{
-					"<F7>",
+					"<F2>",
 					function()
 						require("dap").step_over()
 					end,
 					desc = "Debug: Step Over",
 				},
 				{
-					"<F8>",
+					"<F3>",
 					function()
 						require("dap").step_out()
 					end,
@@ -412,7 +287,7 @@ lazy.setup({
 
 					handlers = {},
 
-					ensure_installed = { "delve", "codelldb" },
+					ensure_installed = { "delve", "codelldb", "debugpy" },
 				})
 
 				dapui.setup()
@@ -421,74 +296,54 @@ lazy.setup({
 					dap.adapters = {}
 				end
 
+				-- go
+				require("dap-go").setup({
+					delve = {
+						detached = vim.fn.has("win32") == 0,
+					},
+				})
+
 				-- rust
-				dap.adapters["probe-rs-debug"] = {
-					type = "server",
-					port = "${port}",
-					executable = {
-						command = vim.fn.expand("$HOME/.cargo/bin/probe-rs"),
-						args = { "dap-server", "--port", "${port}" },
+				dap.adapters.gdb = {
+					type = "executable",
+					command = "gdb",
+					args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
+				}
+				dap.configurations.c = {
+					{
+						name = "Launch",
+						type = "gdb",
+						request = "launch",
+						program = function()
+							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+						end,
+						cwd = "${workspaceFolder}",
+						stopAtBeginningOfMainSubprogram = false,
+					},
+					{
+						name = "Select and attach to process",
+						type = "gdb",
+						request = "attach",
+						program = function()
+							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+						end,
+						pid = function()
+							local name = vim.fn.input("Executable name (filter): ")
+							return require("dap.utils").pick_process({ filter = name })
+						end,
+						cwd = "${workspaceFolder}",
+					},
+					{
+						name = "Attach to gdbserver :1234",
+						type = "gdb",
+						request = "attach",
+						target = "localhost:1234",
+						program = function()
+							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+						end,
+						cwd = "${workspaceFolder}",
 					},
 				}
-				require("dap.ext.vscode").type_to_filetypes["probe-rs-debug"] = { "rust" }
-				dap.listeners.before["event_probe-rs-rtt-channel-config"]["plugins.nvim-dap-probe-rs"] = function(
-					session,
-					body
-				)
-					local utils = require("dap.utils")
-					utils.notify(
-						string.format(
-							'probe-rs: Opening RTT channel %d with name "%s"!',
-							body.channelNumber,
-							body.channelName
-						)
-					)
-					local file = io.open("probe-rs.log", "a")
-					if file then
-						file:write(
-							string.format(
-								'%s: Opening RTT channel %d with name "%s"!\n',
-								os.date("%Y-%m-%d-T%H:%M:%S"),
-								body.channelNumber,
-								body.channelName
-							)
-						)
-					end
-					if file then
-						file:close()
-					end
-					session:request("rttWindowOpened", { body.channelNumber, true })
-				end
-				dap.listeners.before["event_probe-rs-rtt-data"]["plugins.nvim-dap-probe-rs"] = function(_, body)
-					local message = string.format(
-						"%s: RTT-Channel %d - Message: %s",
-						os.date("%Y-%m-%d-T%H:%M:%S"),
-						body.channelNumber,
-						body.data
-					)
-					local repl = require("dap.repl")
-					repl.append(message)
-					local file = io.open("probe-rs.log", "a")
-					if file then
-						file:write(message)
-					end
-					if file then
-						file:close()
-					end
-				end
-				dap.listeners.before["event_probe-rs-show-message"]["plugins.nvim-dap-probe-rs"] = function(_, body)
-					local message =
-						string.format("%s: probe-rs message: %s", os.date("%Y-%m-%d-T%H:%M:%S"), body.message)
-					local repl = require("dap.repl")
-					repl.append(message)
-					local file = io.open("probe-rs.log", "a")
-					if file then
-						file:write(message)
-					end
-					if file then
-						file:close()
-					end
-				end
 
 				dap.listeners.after.event_initialized["dapui_config"] = dapui.open
 				dap.listeners.before.event_terminated["dapui_config"] = dapui.close
@@ -618,16 +473,6 @@ lazy.setup({
 				},
 			},
 
-			-- css
-			{
-				"norcalli/nvim-colorizer.lua",
-				event = { "BufRead" },
-				ft = { "css", "scss", "less" },
-				config = function()
-					require("colorizer").setup()
-				end,
-			},
-
 			-- c/c++
 			{
 				"p00f/clangd_extensions.nvim",
@@ -666,6 +511,37 @@ lazy.setup({
 			lazy = false,
 			config = function()
 				require("leap").setup({})
+			end,
+		},
+
+		-- lint
+		{
+			"mfussenegger/nvim-lint",
+			event = { "BufReadPre", "BufNewFile" },
+			config = function()
+				local lint = require("lint")
+				lint.linters_by_ft = {
+					markdown = { "markdownlint" },
+					clojure = { "clj-kondo" },
+					dockerfile = { "hadolint" },
+					inko = { "inko" },
+					janet = { "janet" },
+					json = { "jsonlint" },
+					rst = { "vale" },
+					ruby = { "ruby" },
+					terraform = { "tflint" },
+					text = { "vale" },
+				}
+
+				local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
+				vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+					group = lint_augroup,
+					callback = function()
+						if vim.opt_local.modifiable:get() then
+							lint.try_lint()
+						end
+					end,
+				})
 			end,
 		},
 
@@ -723,10 +599,12 @@ lazy.setup({
 		{
 			"neovim/nvim-lspconfig",
 			dependencies = {
-				{ "williamboman/mason.nvim", config = true },
+				{
+					"williamboman/mason.nvim",
+					config = true,
+				},
 				"williamboman/mason-lspconfig.nvim",
 				"WhoIsSethDaniel/mason-tool-installer.nvim",
-
 				{
 					"j-hui/fidget.nvim",
 					opts = {
@@ -866,9 +744,9 @@ lazy.setup({
 					-- python
 					basedpyright = {
 						settings = {
-							basedpyright = {
+							python = {
 								analysis = {
-									typeCheckingMode = "off",
+									typeCheckingMode = "basic",
 									autoSearchPaths = true,
 									useLibraryCodeForTypes = true,
 									diagnosticMode = "openFilesOnly",
@@ -1010,7 +888,7 @@ lazy.setup({
 		{
 			"nvim-lualine/lualine.nvim",
 			config = function()
-				local mocha = require("catppuccin.palettes").get_palette("mocha")
+				local colors = dofile(vim.g.base46_cache .. "colors")
 				require("lualine").setup({
 					options = {
 						icons_enabled = true,
@@ -1023,8 +901,7 @@ lazy.setup({
 								"mode",
 								icon = "",
 								color = {
-									bg = mocha.lavender,
-									fg = mocha.mantle,
+									bg = colors.purple,
 									gui = "bold",
 								},
 							},
@@ -1032,20 +909,27 @@ lazy.setup({
 						lualine_b = {
 							{
 								"branch",
+								icon = "",
 								color = {
-									fg = mocha.lavender,
-									bg = mocha.surface0,
+									fg = colors.purple,
+									bg = colors.black,
 								},
 							},
 						},
 						lualine_c = {},
-						lualine_x = {},
+						lualine_x = {
+							{
+								"diagnostics",
+								sources = { "nvim_diagnostic" },
+								symbols = { error = " ", warn = " ", info = " " },
+							},
+						},
 						lualine_y = {
 							{
 								"progress",
 								color = {
-									fg = mocha.text,
-									bg = mocha.mantle,
+									fg = colors.purple,
+									bg = colors.black,
 								},
 							},
 						},
@@ -1053,8 +937,7 @@ lazy.setup({
 							{
 								"location",
 								color = {
-									bg = mocha.lavender,
-									fg = mocha.base,
+									bg = colors.purple,
 									gui = "bold",
 								},
 							},
@@ -1070,6 +953,27 @@ lazy.setup({
 			main = "render-markdown",
 			config = true,
 		},
+
+		-- nvchad
+		"nvim-lua/plenary.nvim",
+		{ "nvim-tree/nvim-web-devicons", lazy = true },
+
+		{
+			"nvchad/ui",
+			config = function()
+				require("nvchad")
+			end,
+		},
+
+		{
+			"nvchad/base46",
+			lazy = true,
+			build = function()
+				require("base46").load_all_highlights()
+			end,
+		},
+
+		"nvchad/volt",
 
 		-- telescope
 		{
@@ -1156,23 +1060,59 @@ lazy.setup({
 			end,
 		},
 
-		-- comments
+		-- transparent
 		{
-			-- todo
-			{
-				"folke/todo-comments.nvim",
-				event = "VimEnter",
-				dependencies = { "nvim-lua/plenary.nvim" },
-				opts = true,
+			"xiyaowong/nvim-transparent",
+			lazy = false,
+			opts = {
+				enable = true,
+				extra_groups = {
+					"barbecue_normal",
+					"barbecue_ellipsis",
+					"barbecue_separator",
+					"barbecue_modified",
+					"barbecue_dirname",
+					"barbecue_basename",
+					"barbecue_context",
+					"barbecue_context_file",
+					"barbecue_context_module",
+					"barbecue_context_namespace",
+					"barbecue_context_package",
+					"barbecue_context_class",
+					"barbecue_context_method",
+					"barbecue_context_property",
+					"barbecue_context_field",
+					"barbecue_context_constructor",
+					"barbecue_context_enum",
+					"barbecue_context_interface",
+					"barbecue_context_function",
+					"barbecue_context_variable",
+					"barbecue_context_constant",
+					"barbecue_context_string",
+					"barbecue_context_number",
+					"barbecue_context_boolean",
+					"barbecue_context_array",
+					"barbecue_context_object",
+					"barbecue_context_key",
+					"barbecue_context_null",
+					"barbecue_context_enum_member",
+					"barbecue_context_struct",
+					"barbecue_context_event",
+					"barbecue_context_operator",
+					"barbecue_context_type_parameter",
+					"TroubleNormal",
+					"TroubleNormalNC",
+				},
 			},
+			config = function(_, opts)
+				local transparent = require("transparent")
+				transparent.setup(opts)
 
-			-- ts-comments (overwrites native comments)
-			{
-				"folke/ts-comments.nvim",
-				opts = {},
-				event = "VeryLazy",
-				enabled = vim.fn.has("nvim-0.10.0") == 1,
-			},
+				local lines = { "lualine_c", "lualine_x" }
+				for _, line in ipairs(lines) do
+					transparent.clear_prefix(line)
+				end
+			end,
 		},
 
 		-- treesitter
@@ -1209,6 +1149,10 @@ lazy.setup({
 				},
 				indent = { enable = true, disable = { "ruby" } },
 			},
+			config = function(_, opts)
+				dofile(vim.g.base46_cache .. "treesitter")
+				require("nvim-treesitter.configs").setup(opts)
+			end,
 		},
 
 		-- undotree
@@ -1257,6 +1201,10 @@ lazy.setup({
 			end,
 		},
 	},
-	install = { colorscheme = { "catppuccin" } },
+	install = { colorscheme = { "nvchad" } },
 	checker = { enabled = true },
 })
+
+for _, v in ipairs(vim.fn.readdir(vim.g.base46_cache)) do
+	dofile(vim.g.base46_cache .. v)
+end
