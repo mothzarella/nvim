@@ -1,6 +1,6 @@
 return {
 	base46 = {
-		theme = "tokyodark",
+		theme = "tundra",
 		hl_add = {},
 		hl_override = {
 			CursorLineNr = { fg = "purple" },

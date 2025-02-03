@@ -1,3 +1,4 @@
+-- nvchad.ui
 vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46_cache/"
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -39,12 +40,21 @@ lazy.setup({
 					function()
 						require("avante").toggle()
 					end,
-					desc = "Toggle Avante",
+					desc = "[C]opilot [C]hat",
 				},
 			},
 			opts = {
 				provider = "copilot",
 				auto_suggestions_provider = "copilot",
+				-- provider = "ollama",
+				-- vendors = {
+				-- 	ollama = {
+				-- 		__inherited_from = "openai",
+				-- 		api_key_name = "",
+				-- 		endpoint = "http://127.0.0.1:11434/v1",
+				-- 		model = "deepseek-r1:14b",
+				-- 	},
+				-- },
 				windows = { position = "left" },
 			},
 			behaviour = {
@@ -79,13 +89,6 @@ lazy.setup({
 							use_absolute_path = true,
 						},
 					},
-				},
-				{
-					"MeanderingProgrammer/render-markdown.nvim",
-					opts = {
-						file_types = { "markdown", "Avante" },
-					},
-					ft = { "markdown", "Avante" },
 				},
 			},
 		},
@@ -128,7 +131,10 @@ lazy.setup({
 			},
 			config = function()
 				require("luasnip.loaders.from_vscode").lazy_load()
-				require("nvim-autopairs").setup({})
+				require("nvim-autopairs").setup({
+					fast_wrap = {},
+					disable_filetype = { "TelescopePrompt", "vim" },
+				})
 
 				local cmp = require("cmp")
 				local cmp_autopairs = require("nvim-autopairs.completion.cmp")
@@ -177,6 +183,7 @@ lazy.setup({
 							name = "lazydev",
 							group_index = 0,
 						},
+						{ name = "render-markdown" },
 						{ name = "nvim_lsp" },
 						{ name = "luasnip" },
 						{ name = "path" },
@@ -435,7 +442,7 @@ lazy.setup({
 				},
 				dependencies = { "nvim-lua/plenary.nvim" },
 				keys = {
-					{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "[L]azy git" },
+					{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "[L]azy [G]it" },
 				},
 			},
 		},
@@ -505,7 +512,6 @@ lazy.setup({
 			},
 
 			-- html
-
 			{
 				"windwp/nvim-ts-autotag",
 				event = { "InsertEnter" },
@@ -529,7 +535,6 @@ lazy.setup({
 			config = function()
 				local lint = require("lint")
 				lint.linters_by_ft = {
-					markdown = { "markdownlint" },
 					clojure = { "clj-kondo" },
 					dockerfile = { "hadolint" },
 					inko = { "inko" },
@@ -707,12 +712,21 @@ lazy.setup({
 					end,
 				})
 
+				if vim.g.have_nerd_font then
+					local signs = { Error = "󰅙", Info = "󰋼", Hint = "󰌵", Warn = "" }
+
+					for name, icon in pairs(signs) do
+						local hl = "DiagnosticSign" .. name
+						vim.fn.sign_define(hl, { text = icon, numhl = hl, texthl = hl })
+					end
+				end
+
 				local capabilities = vim.lsp.protocol.make_client_capabilities()
 				capabilities =
 					vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 
 				local servers = {
-					-- lua ( require man-db on aur repo )
+					-- lua ( require man-db )
 					lua_ls = {
 						settings = {
 							Lua = {
@@ -754,9 +768,7 @@ lazy.setup({
 						settings = {
 							python = {
 								analysis = {
-									typeCheckingMode = "basic",
-									autoSearchPaths = true,
-									useLibraryCodeForTypes = true,
+									reportPrivateLocalImportUsage = "error",
 									diagnosticMode = "openFilesOnly",
 									inlayHints = {
 										variableTypes = true,
@@ -958,8 +970,10 @@ lazy.setup({
 		-- markdown
 		{
 			"MeanderingProgrammer/markdown.nvim",
-			main = "render-markdown",
-			config = true,
+			ft = { "markdown", "Avante", "vimwiki" },
+			opts = {
+				file_types = { "markdown", "Avante", "vimwiki" },
+			},
 		},
 
 		-- nvchad
@@ -1073,7 +1087,6 @@ lazy.setup({
 			"xiyaowong/nvim-transparent",
 			lazy = false,
 			opts = {
-				enable = true,
 				extra_groups = {
 					"barbecue_normal",
 					"barbecue_ellipsis",
@@ -1115,6 +1128,11 @@ lazy.setup({
 			config = function(_, opts)
 				local transparent = require("transparent")
 				transparent.setup(opts)
+
+				-- force transparent enabled
+				if vim.g.transparent_enabled == false then
+					vim.cmd(":TransparentEnable")
+				end
 
 				local lines = { "lualine_c", "lualine_x" }
 				for _, line in ipairs(lines) do
@@ -1186,7 +1204,7 @@ lazy.setup({
 						{
 							"<leader>zt",
 							"<cmd>Twilight<cr>",
-							desc = "Twilight",
+							desc = "[Z]en [T]wilight",
 						},
 					},
 				},
@@ -1195,7 +1213,7 @@ lazy.setup({
 				{
 					"<leader>zz",
 					"<cmd>ZenMode<cr>",
-					desc = "Zen Mode",
+					desc = "[Z]en Mode",
 				},
 			},
 			config = function()
@@ -1213,6 +1231,7 @@ lazy.setup({
 	checker = { enabled = true },
 })
 
+-- nvchad.ui
 for _, v in ipairs(vim.fn.readdir(vim.g.base46_cache)) do
 	dofile(vim.g.base46_cache .. v)
 end
