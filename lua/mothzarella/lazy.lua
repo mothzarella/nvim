@@ -27,6 +27,7 @@ require("mothzarella.remap")
 lazy.setup({
 	spec = {
 		"christoomey/vim-tmux-navigator",
+		{ "karb94/neoscroll.nvim", opts = true },
 
 		-- avante
 		{
@@ -34,18 +35,13 @@ lazy.setup({
 			event = "VeryLazy",
 			lazy = false,
 			version = false,
-			keys = {
-				{
-					"<leader>cc",
-					function()
-						require("avante").toggle()
-					end,
-					desc = "[C]opilot [C]hat",
-				},
-			},
 			opts = {
 				provider = "copilot",
 				auto_suggestions_provider = "copilot",
+				mappings = {
+					ask = "<leader>cc",
+					clear_history = "<leader>ch",
+				},
 				-- provider = "ollama",
 				-- vendors = {
 				-- 	ollama = {
@@ -225,7 +221,8 @@ lazy.setup({
 				"williamboman/mason.nvim",
 				"jay-babu/mason-nvim-dap.nvim",
 
-				{ "leoluz/nvim-dap-go", ft = "go" },
+				-- go debugger
+				"leoluz/nvim-dap-go",
 			},
 			keys = {
 				{
@@ -291,10 +288,12 @@ lazy.setup({
 
 				require("mason-nvim-dap").setup({
 					automatic_installation = true,
-
 					handlers = {},
-
-					ensure_installed = { "delve", "codelldb", "debugpy" },
+					ensure_installed = {
+						"delve",
+						"codelldb",
+						"debugpy",
+					},
 				})
 
 				dapui.setup()
@@ -316,6 +315,8 @@ lazy.setup({
 					command = "gdb",
 					args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
 				}
+
+				-- c/c++
 				dap.configurations.c = {
 					{
 						name = "Launch",
@@ -465,6 +466,7 @@ lazy.setup({
 			{
 				"saecki/crates.nvim",
 				event = { "BufRead Cargo.toml" },
+				ft = { "toml" },
 				opts = {
 					completion = {
 						crates = {
@@ -477,6 +479,10 @@ lazy.setup({
 						completion = true,
 						hover = true,
 					},
+				},
+				{
+					"cordx56/rustowl",
+					dependencies = { "neovim/nvim-lspconfig" },
 				},
 			},
 
@@ -768,8 +774,8 @@ lazy.setup({
 						settings = {
 							python = {
 								analysis = {
-									reportPrivateLocalImportUsage = "error",
-									diagnosticMode = "openFilesOnly",
+									typeCheckingMode = "basic",
+									diagnosticMode = "workspace",
 									inlayHints = {
 										variableTypes = true,
 										callArgumentNames = true,

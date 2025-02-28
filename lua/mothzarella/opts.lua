@@ -56,3 +56,7 @@ vim.diagnostic.config({
 	update_in_insert = true, -- update diagnostics in insert mode
 	severity_sort = true, -- order by severity
 })
+
+-- text wrapping
+vim.wo.wrap = false
+vim.wo.linebreak = true
