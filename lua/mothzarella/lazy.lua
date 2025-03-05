@@ -26,8 +26,18 @@ require("mothzarella.remap")
 -- lazy setup
 lazy.setup({
 	spec = {
+		-- tmux support
 		"christoomey/vim-tmux-navigator",
+
+		-- smooth scroll
 		{ "karb94/neoscroll.nvim", opts = true },
+
+		-- image preview
+		{
+			"3rd/image.nvim",
+			build = false,
+			opts = {},
+		},
 
 		-- avante
 		{

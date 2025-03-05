@@ -29,5 +29,6 @@ vim.keymap.set("n", "<leader>e", "<cmd>Explore<CR>")
 vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 
 -- source netrw.vim
--- internal netrw remaps with vimscript
-vim.cmd("source $HOME/.config/nvim/lua/mothzarella/netrw.vim")
+-- internal netrw remaps with vimscript (cuz i have no idea how to do it with lua)
+local path = vim.fn.stdpath("config") .. "/plugin/netrw.vim"
+vim.cmd("source " .. path)
