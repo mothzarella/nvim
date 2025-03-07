@@ -1,6 +1,19 @@
 -- nvchad.ui
 vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46_cache/"
 
+-- barbecue.ui
+vim.api.nvim_create_autocmd({
+	"WinScrolled", -- or WinResized on NVIM-v0.9 and higher
+	"BufWinEnter",
+	"CursorHold",
+	"InsertLeave",
+}, {
+	group = vim.api.nvim_create_augroup("barbecue.updater", {}),
+	callback = function()
+		require("barbecue.ui").update()
+	end,
+})
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
 if not (vim.uv or vim.noop).fs_stat(lazypath) then
@@ -35,7 +48,15 @@ lazy.setup({
 		-- image preview
 		{
 			"3rd/image.nvim",
-			build = false,
+			dependencies = {
+				{
+					"vhyrro/luarocks.nvim",
+					priority = 1001,
+					opts = {
+						rocks = { "magick" },
+					},
+				},
+			},
 			opts = {},
 		},
 
@@ -52,24 +73,6 @@ lazy.setup({
 					ask = "<leader>cc",
 					clear_history = "<leader>ch",
 				},
-				-- provider = "ollama",
-				-- vendors = {
-				-- 	ollama = {
-				-- 		__inherited_from = "openai",
-				-- 		api_key_name = "",
-				-- 		endpoint = "http://127.0.0.1:11434/v1",
-				-- 		model = "deepseek-r1:14b",
-				-- 	},
-				-- },
-				windows = { position = "left" },
-			},
-			behaviour = {
-				auto_suggestions = true,
-				auto_set_highlight_group = true,
-				auto_set_keymaps = true,
-				auto_apply_diff_after_generation = false,
-				support_paste_from_clipboard = false,
-				minimize_diff = true,
 			},
 			build = "make",
 			dependencies = {
@@ -104,9 +107,61 @@ lazy.setup({
 			"utilyre/barbecue.nvim",
 			name = "barbecue",
 			version = "*",
-			dependencies = { "SmiteshP/nvim-navic" },
+			dependencies = {
+				"SmiteshP/nvim-navic",
+				"nvim-tree/nvim-web-devicons",
+			},
 			config = function()
+				local colors = dofile(vim.g.base46_cache .. "colors")
 				require("barbecue").setup({
+					theme = {
+						normal = {
+							fg = colors.grey_fg,
+						},
+						context_module = {
+							fg = colors.purple,
+						},
+						context_namespace = {
+							fg = colors.yellow,
+						},
+						context_array = {
+							fg = colors.red,
+						},
+						context_object = {
+							fg = colors.red,
+						},
+					},
+					symbols = {
+						separator = "",
+					},
+					kinds = {
+						File = "",
+						Module = "",
+						Namespace = "",
+						Package = "",
+						Class = "",
+						Method = "",
+						Property = "",
+						Field = "",
+						Constructor = "",
+						Enum = "",
+						Interface = "",
+						Function = "",
+						Variable = "",
+						Constant = "",
+						String = "",
+						Number = "",
+						Boolean = "",
+						Array = "",
+						Object = "",
+						Key = "",
+						Null = "",
+						EnumMember = "",
+						Struct = "",
+						Event = "",
+						Operator = "",
+						TypeParameter = "",
+					},
 					exclude_filetypes = {},
 					show_dirname = false,
 					show_basename = false,
@@ -952,13 +1007,25 @@ lazy.setup({
 								},
 							},
 						},
-						lualine_c = {},
+						lualine_c = {
+							{
+								"filename",
+								file_status = true,
+								newfile_status = false,
+								color = { fg = colors.grey_fg },
+								symbols = {
+									modified = "󱗝 ",
+									readonly = " ",
+								},
+							},
+						},
 						lualine_x = {
 							{
 								"diagnostics",
 								sources = { "nvim_diagnostic" },
 								symbols = { error = " ", warn = " ", info = " " },
 							},
+							{ "filetype", icon_only = true },
 						},
 						lualine_y = {
 							{
