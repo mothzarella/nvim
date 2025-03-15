@@ -39,26 +39,6 @@ require 'mothzarella.remap'
 -- lazy setup
 lazy.setup {
 	spec = {
-		-- tmux support
-		'christoomey/vim-tmux-navigator',
-
-		-- smooth scroll
-		{ 'karb94/neoscroll.nvim', opts = true },
-
-		-- image preview
-		{
-			'3rd/image.nvim',
-			dependencies = {
-				{
-					'vhyrro/luarocks.nvim',
-					priority = 1001,
-					opts = {
-						rocks = { 'magick' },
-					},
-				},
-			},
-			opts = {},
-		},
 
 		-- avante
 		{
@@ -260,6 +240,13 @@ lazy.setup {
 				cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
 				cmp.setup(options)
 			end,
+		},
+
+		-- code collapsing
+		{
+			'kevinhwang91/nvim-ufo',
+			dependencies = 'kevinhwang91/promise-async',
+			opts = {},
 		},
 
 		-- comments
@@ -515,6 +502,21 @@ lazy.setup {
 					{ '<leader>lg', '<cmd>LazyGit<cr>', desc = '[L]azy [G]it' },
 				},
 			},
+		},
+
+		-- image preview
+		{
+			'3rd/image.nvim',
+			dependencies = {
+				{
+					'vhyrro/luarocks.nvim',
+					priority = 1001,
+					opts = {
+						rocks = { 'magick' },
+					},
+				},
+			},
+			opts = {},
 		},
 
 		-- languages
@@ -1092,25 +1094,27 @@ lazy.setup {
 		},
 
 		-- nvchad
-		'nvim-lua/plenary.nvim',
-		{ 'nvim-tree/nvim-web-devicons', lazy = true },
-
 		{
-			'nvchad/ui',
-			config = function()
-				require 'nvchad'
-			end,
+			'nvim-lua/plenary.nvim',
+			{ 'nvim-tree/nvim-web-devicons', lazy = true },
+			{
+				'nvchad/ui',
+				config = function()
+					require 'nvchad'
+				end,
+			},
+			{
+				'nvchad/base46',
+				lazy = true,
+				build = function()
+					require('base46').load_all_highlights()
+				end,
+			},
+			'nvchad/volt',
 		},
 
-		{
-			'nvchad/base46',
-			lazy = true,
-			build = function()
-				require('base46').load_all_highlights()
-			end,
-		},
-
-		'nvchad/volt',
+		-- smooth scroll
+		{ 'karb94/neoscroll.nvim', opts = true },
 
 		-- telescope
 		{
@@ -1196,6 +1200,9 @@ lazy.setup {
 				end, { desc = '[/] Fuzzily search in current buffer' })
 			end,
 		},
+
+		-- tmux support
+		'christoomey/vim-tmux-navigator',
 
 		-- transparent
 		{
