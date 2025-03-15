@@ -6,7 +6,7 @@ vim.o.number = true
 vim.o.relativenumber = true
 
 -- enable mouse mode (can be useful for resizing)
-vim.o.mouse = "a"
+vim.o.mouse = 'a'
 
 -- minimal number of screen lines to keep above and below the cursor
 vim.o.scrolloff = 10
@@ -30,7 +30,7 @@ vim.g.have_nerd_font = true
 -- current cursor line
 vim.o.cursorline = true
 
-vim.o.signcolumn = "yes:1"
+vim.o.signcolumn = 'yes:1'
 
 -- tab width
 local tab = 2
@@ -44,18 +44,18 @@ vim.o.expandtab = true
 vim.o.termguicolors = true
 
 -- vert splits fill charts
-vim.o.fillchars = "vert:│"
+vim.o.fillchars = 'vert:│'
 
 -- status line always visible
 vim.o.laststatus = 3
 
 -- diagnostics
-vim.diagnostic.config({
+vim.diagnostic.config {
 	virtual_text = true, -- show diagnostics in virtual text
 	signs = true, -- show diagnostics in signs
 	update_in_insert = true, -- update diagnostics in insert mode
 	severity_sort = true, -- order by severity
-})
+}
 
 -- text wrapping
 vim.wo.wrap = false

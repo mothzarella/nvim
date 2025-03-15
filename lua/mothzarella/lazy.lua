@@ -1,29 +1,29 @@
 -- nvchad.ui
-vim.g.base46_cache = vim.fn.stdpath("data") .. "/base46_cache/"
+vim.g.base46_cache = vim.fn.stdpath 'data' .. '/base46_cache/'
 
 -- barbecue.ui
 vim.api.nvim_create_autocmd({
-	"WinScrolled", -- or WinResized on NVIM-v0.9 and higher
-	"BufWinEnter",
-	"CursorHold",
-	"InsertLeave",
+	'WinScrolled', -- or WinResized on NVIM-v0.9 and higher
+	'BufWinEnter',
+	'CursorHold',
+	'InsertLeave',
 }, {
-	group = vim.api.nvim_create_augroup("barbecue.updater", {}),
+	group = vim.api.nvim_create_augroup('barbecue.updater', {}),
 	callback = function()
-		require("barbecue.ui").update()
+		require('barbecue.ui').update()
 	end,
 })
 
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 
 if not (vim.uv or vim.noop).fs_stat(lazypath) then
-	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-	local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+	local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+	local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
 	if vim.v.shell_error ~= 0 then
 		vim.api.nvim_echo({
-			{ "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-			{ out, "WarningMsg" },
-			{ "\nPress any key to exit..." },
+			{ 'Failed to clone lazy.nvim:\n', 'ErrorMsg' },
+			{ out, 'WarningMsg' },
+			{ '\nPress any key to exit...' },
 		}, true, {})
 		vim.fn.getchar()
 		os.exit(1)
@@ -31,29 +31,29 @@ if not (vim.uv or vim.noop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-local lazy = require("lazy")
+local lazy = require 'lazy'
 
-require("mothzarella.opts")
-require("mothzarella.remap")
+require 'mothzarella.opts'
+require 'mothzarella.remap'
 
 -- lazy setup
-lazy.setup({
+lazy.setup {
 	spec = {
 		-- tmux support
-		"christoomey/vim-tmux-navigator",
+		'christoomey/vim-tmux-navigator',
 
 		-- smooth scroll
-		{ "karb94/neoscroll.nvim", opts = true },
+		{ 'karb94/neoscroll.nvim', opts = true },
 
 		-- image preview
 		{
-			"3rd/image.nvim",
+			'3rd/image.nvim',
 			dependencies = {
 				{
-					"vhyrro/luarocks.nvim",
+					'vhyrro/luarocks.nvim',
 					priority = 1001,
 					opts = {
-						rocks = { "magick" },
+						rocks = { 'magick' },
 					},
 				},
 			},
@@ -62,32 +62,32 @@ lazy.setup({
 
 		-- avante
 		{
-			"yetone/avante.nvim",
-			event = "VeryLazy",
+			'yetone/avante.nvim',
+			event = 'VeryLazy',
 			lazy = false,
 			version = false,
 			opts = {
-				provider = "copilot",
-				auto_suggestions_provider = "copilot",
+				provider = 'copilot',
+				auto_suggestions_provider = 'copilot',
 				mappings = {
-					ask = "<leader>cc",
-					clear_history = "<leader>ch",
+					ask = '<leader>cc',
+					clear_history = '<leader>ch',
 				},
 			},
-			build = "make",
+			build = 'make',
 			dependencies = {
-				"stevearc/dressing.nvim",
-				"nvim-lua/plenary.nvim",
-				"MunifTanjim/nui.nvim",
-				"echasnovski/mini.pick",
-				"nvim-telescope/telescope.nvim",
-				"hrsh7th/nvim-cmp",
-				"ibhagwan/fzf-lua",
-				"nvim-tree/nvim-web-devicons",
-				"github/copilot.vim",
+				'stevearc/dressing.nvim',
+				'nvim-lua/plenary.nvim',
+				'MunifTanjim/nui.nvim',
+				'echasnovski/mini.pick',
+				'nvim-telescope/telescope.nvim',
+				'hrsh7th/nvim-cmp',
+				'ibhagwan/fzf-lua',
+				'nvim-tree/nvim-web-devicons',
+				'github/copilot.vim',
 				{
-					"HakonHarnes/img-clip.nvim",
-					event = "VeryLazy",
+					'HakonHarnes/img-clip.nvim',
+					event = 'VeryLazy',
 					opts = {
 						default = {
 							embed_image_as_base64 = false,
@@ -104,104 +104,108 @@ lazy.setup({
 
 		-- barbecue
 		{
-			"utilyre/barbecue.nvim",
-			name = "barbecue",
-			version = "*",
+			'utilyre/barbecue.nvim',
+			name = 'barbecue',
+			version = '*',
 			dependencies = {
-				"SmiteshP/nvim-navic",
-				"nvim-tree/nvim-web-devicons",
+				'SmiteshP/nvim-navic',
+				'nvim-tree/nvim-web-devicons',
 			},
 			config = function()
-				local colors = dofile(vim.g.base46_cache .. "colors")
-				require("barbecue").setup({
+				local colors = dofile(vim.g.base46_cache .. 'colors')
+				require('barbecue').setup {
 					theme = {
 						normal = {
 							fg = colors.grey_fg,
 						},
+
+						context_constant = {
+							fg = colors.yellow, -- 
+						},
 						context_module = {
-							fg = colors.purple,
+							fg = colors.purple, -- 
 						},
 						context_namespace = {
-							fg = colors.yellow,
+							fg = colors.yellow, -- 
 						},
 						context_array = {
-							fg = colors.red,
+							fg = colors.red, -- 
 						},
 						context_object = {
-							fg = colors.red,
+							fg = colors.red, -- 
 						},
 					},
 					symbols = {
-						separator = "",
+						separator = '',
 					},
 					kinds = {
-						File = "",
-						Module = "",
-						Namespace = "",
-						Package = "",
-						Class = "",
-						Method = "",
-						Property = "",
-						Field = "",
-						Constructor = "",
-						Enum = "",
-						Interface = "",
-						Function = "",
-						Variable = "",
-						Constant = "",
-						String = "",
-						Number = "",
-						Boolean = "",
-						Array = "",
-						Object = "",
-						Key = "",
-						Null = "",
-						EnumMember = "",
-						Struct = "",
-						Event = "",
-						Operator = "",
-						TypeParameter = "",
+						File = '',
+						Module = '',
+						Namespace = '',
+						Package = '',
+						Class = '',
+						Method = '',
+						Property = '',
+						Field = '',
+						Constructor = '',
+						Enum = '',
+						Interface = '',
+						Function = '',
+						Variable = '',
+						Constant = '',
+						String = '',
+						Number = '',
+						Boolean = '',
+						Array = '',
+						Object = '',
+						Key = '',
+						Null = '',
+						EnumMember = '',
+						Struct = '',
+						Event = '',
+						Operator = '',
+						TypeParameter = '',
 					},
 					exclude_filetypes = {},
 					show_dirname = false,
 					show_basename = false,
-				})
+				}
 			end,
 		},
 
 		-- CMP
 		{
-			"hrsh7th/nvim-cmp",
-			event = "InsertEnter",
+			'hrsh7th/nvim-cmp',
+			event = 'InsertEnter',
 			dependencies = {
 				{
-					"L3MON4D3/LuaSnip",
-					dependencies = { "rafamadriz/friendly-snippets" },
+					'L3MON4D3/LuaSnip',
+					dependencies = { 'rafamadriz/friendly-snippets' },
 					build = (function()
-						if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
+						if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
 							return
 						end
-						return "make install_jsregexp"
+						return 'make install_jsregexp'
 					end)(),
 				},
-				"saadparwaiz1/cmp_luasnip",
+				'saadparwaiz1/cmp_luasnip',
 
-				"windwp/nvim-autopairs",
-				"hrsh7th/cmp-nvim-lsp",
-				"hrsh7th/cmp-path",
+				'windwp/nvim-autopairs',
+				'hrsh7th/cmp-nvim-lsp',
+				'hrsh7th/cmp-path',
 			},
 			config = function()
-				require("luasnip.loaders.from_vscode").lazy_load()
-				require("nvim-autopairs").setup({
+				require('luasnip.loaders.from_vscode').lazy_load()
+				require('nvim-autopairs').setup {
 					fast_wrap = {},
-					disable_filetype = { "TelescopePrompt", "vim" },
-				})
+					disable_filetype = { 'TelescopePrompt', 'vim' },
+				}
 
-				local cmp = require("cmp")
-				local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-				local luasnip = require("luasnip")
+				local cmp = require 'cmp'
+				local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
+				local luasnip = require 'luasnip'
 
-				luasnip.config.setup({})
+				luasnip.config.setup {}
 
 				local options = {
 					snippet = {
@@ -209,51 +213,51 @@ lazy.setup({
 							luasnip.lsp_expand(args.body)
 						end,
 					},
-					completion = { completeopt = "menu,menuone,noinsert" },
-					mapping = cmp.mapping.preset.insert({
+					completion = { completeopt = 'menu,menuone,noinsert' },
+					mapping = cmp.mapping.preset.insert {
 
 						-- completion
-						["<C-n>"] = cmp.mapping.select_next_item(),
-						["<C-p>"] = cmp.mapping.select_prev_item(),
-						["<CR>"] = cmp.mapping.confirm({ select = true }),
-						["<C-Space>"] = cmp.mapping(function()
+						['<C-n>'] = cmp.mapping.select_next_item(),
+						['<C-p>'] = cmp.mapping.select_prev_item(),
+						['<CR>'] = cmp.mapping.confirm { select = true },
+						['<C-Space>'] = cmp.mapping(function()
 							if cmp.visible() then
 								cmp.close()
 							else
 								cmp.complete()
 							end
-						end, { "i", "s" }),
+						end, { 'i', 's' }),
 
 						-- documentation
-						["<C-b>"] = cmp.mapping.scroll_docs(-4),
-						["<C-f>"] = cmp.mapping.scroll_docs(4),
+						['<C-b>'] = cmp.mapping.scroll_docs(-4),
+						['<C-f>'] = cmp.mapping.scroll_docs(4),
 
-						["<C-l>"] = cmp.mapping(function()
+						['<C-l>'] = cmp.mapping(function()
 							if luasnip.expand_or_locally_jumpable() then
 								luasnip.expand_or_jump()
 							end
-						end, { "i", "s" }),
-						["<C-h>"] = cmp.mapping(function()
+						end, { 'i', 's' }),
+						['<C-h>'] = cmp.mapping(function()
 							if luasnip.locally_jumpable(-1) then
 								luasnip.jump(-1)
 							end
-						end, { "i", "s" }),
-					}),
+						end, { 'i', 's' }),
+					},
 					sources = {
 						{
-							name = "lazydev",
+							name = 'lazydev',
 							group_index = 0,
 						},
-						{ name = "render-markdown" },
-						{ name = "nvim_lsp" },
-						{ name = "luasnip" },
-						{ name = "path" },
+						{ name = 'render-markdown' },
+						{ name = 'nvim_lsp' },
+						{ name = 'luasnip' },
+						{ name = 'path' },
 					},
 				}
 
-				options = vim.tbl_deep_extend("force", options, require("nvchad.cmp"))
+				options = vim.tbl_deep_extend('force', options, require 'nvchad.cmp')
 
-				cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+				cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
 				cmp.setup(options)
 			end,
 		},
@@ -262,104 +266,104 @@ lazy.setup({
 		{
 			-- todo
 			{
-				"folke/todo-comments.nvim",
-				event = "VimEnter",
-				dependencies = { "nvim-lua/plenary.nvim" },
+				'folke/todo-comments.nvim',
+				event = 'VimEnter',
+				dependencies = { 'nvim-lua/plenary.nvim' },
 				opts = true,
 			},
 
 			-- ts-comments (overwrites native comments)
 			{
-				"folke/ts-comments.nvim",
+				'folke/ts-comments.nvim',
 				opts = {},
-				event = "VeryLazy",
-				enabled = vim.fn.has("nvim-0.10.0") == 1,
+				event = 'VeryLazy',
+				enabled = vim.fn.has 'nvim-0.10.0' == 1,
 			},
 		},
 
 		-- DAP
 		{
-			"mfussenegger/nvim-dap",
+			'mfussenegger/nvim-dap',
 			dependencies = {
-				"rcarriga/nvim-dap-ui",
-				"nvim-neotest/nvim-nio",
-				"williamboman/mason.nvim",
-				"jay-babu/mason-nvim-dap.nvim",
+				'rcarriga/nvim-dap-ui',
+				'nvim-neotest/nvim-nio',
+				'williamboman/mason.nvim',
+				'jay-babu/mason-nvim-dap.nvim',
 
 				-- go debugger
-				"leoluz/nvim-dap-go",
+				'leoluz/nvim-dap-go',
 			},
 			keys = {
 				{
-					"<F5>",
+					'<F5>',
 					function()
-						require("dap").continue()
+						require('dap').continue()
 					end,
-					desc = "Debug: Start/Continue",
+					desc = 'Debug: Start/Continue',
 				},
 				{
-					"<F1>",
+					'<F1>',
 					function()
-						require("dap").step_into()
+						require('dap').step_into()
 					end,
-					desc = "Debug: Step Into",
+					desc = 'Debug: Step Into',
 				},
 				{
-					"<F2>",
+					'<F2>',
 					function()
-						require("dap").step_over()
+						require('dap').step_over()
 					end,
-					desc = "Debug: Step Over",
+					desc = 'Debug: Step Over',
 				},
 				{
-					"<F3>",
+					'<F3>',
 					function()
-						require("dap").step_out()
+						require('dap').step_out()
 					end,
-					desc = "Debug: Step Out",
+					desc = 'Debug: Step Out',
 				},
 				{
-					"<leader>b",
+					'<leader>b',
 					function()
-						require("dap").toggle_breakpoint()
+						require('dap').toggle_breakpoint()
 					end,
-					desc = "Debug: Toggle Breakpoint",
+					desc = 'Debug: Toggle Breakpoint',
 				},
 				{
-					"<leader>B",
+					'<leader>B',
 					function()
-						require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+						require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
 					end,
-					desc = "Debug: Set Breakpoint",
+					desc = 'Debug: Set Breakpoint',
 				},
 				{
-					"<leader>d",
+					'<leader>d',
 					function()
-						require("dapui").toggle()
+						require('dapui').toggle()
 					end,
-					desc = "Debug: See last session result.",
+					desc = 'Debug: See last session result.',
 				},
 				{
-					"<leader>dr",
+					'<leader>dr',
 					function()
-						require("dapui").open({ reset = true })
+						require('dapui').open { reset = true }
 					end,
-					desc = "Debug: Reset UI",
+					desc = 'Debug: Reset UI',
 				},
 			},
 			config = function()
-				local dap = require("dap")
-				local dapui = require("dapui")
+				local dap = require 'dap'
+				local dapui = require 'dapui'
 
-				require("mason-nvim-dap").setup({
+				require('mason-nvim-dap').setup {
 					automatic_installation = true,
 					handlers = {},
 					ensure_installed = {
-						"delve",
-						"codelldb",
-						"debugpy",
+						'delve',
+						'codelldb',
+						'debugpy',
 					},
-				})
+				}
 
 				dapui.setup()
 
@@ -368,75 +372,75 @@ lazy.setup({
 				end
 
 				-- go
-				require("dap-go").setup({
+				require('dap-go').setup {
 					delve = {
-						detached = vim.fn.has("win32") == 0,
+						detached = vim.fn.has 'win32' == 0,
 					},
-				})
+				}
 
 				-- rust
 				dap.adapters.gdb = {
-					type = "executable",
-					command = "gdb",
-					args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
+					type = 'executable',
+					command = 'gdb',
+					args = { '--interpreter=dap', '--eval-command', 'set print pretty on' },
 				}
 
 				-- c/c++
 				dap.configurations.c = {
 					{
-						name = "Launch",
-						type = "gdb",
-						request = "launch",
+						name = 'Launch',
+						type = 'gdb',
+						request = 'launch',
 						program = function()
-							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+							return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
 						end,
-						cwd = "${workspaceFolder}",
+						cwd = '${workspaceFolder}',
 						stopAtBeginningOfMainSubprogram = false,
 					},
 					{
-						name = "Select and attach to process",
-						type = "gdb",
-						request = "attach",
+						name = 'Select and attach to process',
+						type = 'gdb',
+						request = 'attach',
 						program = function()
-							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+							return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
 						end,
 						pid = function()
-							local name = vim.fn.input("Executable name (filter): ")
-							return require("dap.utils").pick_process({ filter = name })
+							local name = vim.fn.input 'Executable name (filter): '
+							return require('dap.utils').pick_process { filter = name }
 						end,
-						cwd = "${workspaceFolder}",
+						cwd = '${workspaceFolder}',
 					},
 					{
-						name = "Attach to gdbserver :1234",
-						type = "gdb",
-						request = "attach",
-						target = "localhost:1234",
+						name = 'Attach to gdbserver :1234',
+						type = 'gdb',
+						request = 'attach',
+						target = 'localhost:1234',
 						program = function()
-							return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+							return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
 						end,
-						cwd = "${workspaceFolder}",
+						cwd = '${workspaceFolder}',
 					},
 				}
 
-				dap.listeners.after.event_initialized["dapui_config"] = dapui.open
-				dap.listeners.before.event_terminated["dapui_config"] = dapui.close
-				dap.listeners.before.event_exited["dapui_config"] = dapui.close
+				dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+				dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+				dap.listeners.before.event_exited['dapui_config'] = dapui.close
 			end,
 		},
 
 		-- formatter
 		{
-			"stevearc/conform.nvim",
-			event = { "BufWritePre" },
-			cmd = { "ConformInfo" },
+			'stevearc/conform.nvim',
+			event = { 'BufWritePre' },
+			cmd = { 'ConformInfo' },
 			keys = {
 				{
-					"<leader>cf",
+					'<leader>cf',
 					function()
-						require("conform").format({ async = true, lsp_format = "fallback" })
+						require('conform').format { async = true, lsp_format = 'fallback' }
 					end,
-					mode = { "n", "x" },
-					desc = "[F]ormat buffer",
+					mode = { 'n', 'x' },
+					desc = '[F]ormat buffer',
 				},
 			},
 			opts = {
@@ -445,9 +449,9 @@ lazy.setup({
 					local disable_filetypes = { c = true, cpp = true }
 					local lsp_format_opt
 					if disable_filetypes[vim.bo[bufnr].filetype] then
-						lsp_format_opt = "never"
+						lsp_format_opt = 'never'
 					else
-						lsp_format_opt = "fallback"
+						lsp_format_opt = 'fallback'
 					end
 					return {
 						timeout_ms = 500,
@@ -455,10 +459,10 @@ lazy.setup({
 					}
 				end,
 				formatters_by_ft = {
-					lua = { "stylua" },
-					go = { "goimports", "gofumpt" },
-					python = { "black" },
-					typescript = { "prettier" },
+					lua = { 'stylua' },
+					go = { 'goimports', 'gofumpt' },
+					python = { 'black' },
+					typescript = { 'prettier' },
 				},
 			},
 		},
@@ -466,10 +470,10 @@ lazy.setup({
 		-- git
 		{
 			{
-				"lewis6991/gitsigns.nvim",
+				'lewis6991/gitsigns.nvim',
 				opts = {
 					on_attach = function(bufnr)
-						local gitsigns = require("gitsigns")
+						local gitsigns = require 'gitsigns'
 
 						local function map(mode, l, r, opts)
 							opts = opts or {}
@@ -478,37 +482,37 @@ lazy.setup({
 						end
 
 						-- Navigation
-						map("n", "]c", function()
+						map('n', ']c', function()
 							if vim.wo.diff then
-								vim.cmd.normal({ "]c", bang = true })
+								vim.cmd.normal { ']c', bang = true }
 							else
-								gitsigns.nav_hunk("next")
+								gitsigns.nav_hunk 'next'
 							end
-						end, { desc = "Jump to next git [c]hange" })
+						end, { desc = 'Jump to next git [c]hange' })
 
-						map("n", "[c", function()
+						map('n', '[c', function()
 							if vim.wo.diff then
-								vim.cmd.normal({ "[c", bang = true })
+								vim.cmd.normal { '[c', bang = true }
 							else
-								gitsigns.nav_hunk("prev")
+								gitsigns.nav_hunk 'prev'
 							end
-						end, { desc = "Jump to previous git [c]hange" })
+						end, { desc = 'Jump to previous git [c]hange' })
 					end,
 				},
 			},
 			{
-				"kdheepak/lazygit.nvim",
+				'kdheepak/lazygit.nvim',
 				lazy = true,
 				cmd = {
-					"LazyGit",
-					"LazyGitConfig",
-					"LazyGitCurrentFile",
-					"LazyGitFilter",
-					"LazyGitFilterCurrentFile",
+					'LazyGit',
+					'LazyGitConfig',
+					'LazyGitCurrentFile',
+					'LazyGitFilter',
+					'LazyGitFilterCurrentFile',
 				},
-				dependencies = { "nvim-lua/plenary.nvim" },
+				dependencies = { 'nvim-lua/plenary.nvim' },
 				keys = {
-					{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "[L]azy [G]it" },
+					{ '<leader>lg', '<cmd>LazyGit<cr>', desc = '[L]azy [G]it' },
 				},
 			},
 		},
@@ -517,21 +521,21 @@ lazy.setup({
 		{
 			-- go
 			{
-				"ray-x/go.nvim",
-				dependencies = { "ray-x/guihua.lua" },
+				'ray-x/go.nvim',
+				dependencies = { 'ray-x/guihua.lua' },
 				config = function()
-					require("go").setup({})
+					require('go').setup {}
 				end,
-				event = { "CmdlineEnter" },
-				ft = { "go", "gomod" },
+				event = { 'CmdlineEnter' },
+				ft = { 'go', 'gomod' },
 				build = ':lua require("go.install").update_all_sync()',
 			},
 
 			-- rust
 			{
-				"saecki/crates.nvim",
-				event = { "BufRead Cargo.toml" },
-				ft = { "toml" },
+				'saecki/crates.nvim',
+				event = { 'BufRead Cargo.toml' },
+				ft = { 'toml' },
 				opts = {
 					completion = {
 						crates = {
@@ -546,14 +550,14 @@ lazy.setup({
 					},
 				},
 				{
-					"cordx56/rustowl",
-					dependencies = { "neovim/nvim-lspconfig" },
+					'cordx56/rustowl',
+					dependencies = { 'neovim/nvim-lspconfig' },
 				},
 			},
 
 			-- c/c++
 			{
-				"p00f/clangd_extensions.nvim",
+				'p00f/clangd_extensions.nvim',
 				lazy = true,
 				config = function() end,
 				opts = {
@@ -562,21 +566,21 @@ lazy.setup({
 					},
 					ast = {
 						role_icons = {
-							type = "",
-							declaration = "",
-							expression = "",
-							specifier = "",
-							statement = "",
-							["template argument"] = "",
+							type = '',
+							declaration = '',
+							expression = '',
+							specifier = '',
+							statement = '',
+							['template argument'] = '',
 						},
 						kind_icons = {
-							Compound = "",
-							Recovery = "",
-							TranslationUnit = "",
-							PackExpansion = "",
-							TemplateTypeParm = "",
-							TemplateTemplateParm = "",
-							TemplateParamObject = "",
+							Compound = '',
+							Recovery = '',
+							TranslationUnit = '',
+							PackExpansion = '',
+							TemplateTypeParm = '',
+							TemplateTemplateParm = '',
+							TemplateParamObject = '',
 						},
 					},
 				},
@@ -584,41 +588,41 @@ lazy.setup({
 
 			-- html
 			{
-				"windwp/nvim-ts-autotag",
-				event = { "InsertEnter" },
+				'windwp/nvim-ts-autotag',
+				event = { 'InsertEnter' },
 				opts = {},
 			},
 		},
 
 		-- leap
 		{
-			"ggandor/leap.nvim",
+			'ggandor/leap.nvim',
 			lazy = false,
 			config = function()
-				require("leap").setup({})
+				require('leap').setup {}
 			end,
 		},
 
 		-- lint
 		{
-			"mfussenegger/nvim-lint",
-			event = { "BufReadPre", "BufNewFile" },
+			'mfussenegger/nvim-lint',
+			event = { 'BufReadPre', 'BufNewFile' },
 			config = function()
-				local lint = require("lint")
+				local lint = require 'lint'
 				lint.linters_by_ft = {
-					clojure = { "clj-kondo" },
-					dockerfile = { "hadolint" },
-					inko = { "inko" },
-					janet = { "janet" },
-					json = { "jsonlint" },
-					rst = { "vale" },
-					ruby = { "ruby" },
-					terraform = { "tflint" },
-					text = { "vale" },
+					clojure = { 'clj-kondo' },
+					dockerfile = { 'hadolint' },
+					inko = { 'inko' },
+					janet = { 'janet' },
+					json = { 'jsonlint' },
+					rst = { 'vale' },
+					ruby = { 'ruby' },
+					terraform = { 'tflint' },
+					text = { 'vale' },
 				}
 
-				local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-				vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+				local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
+				vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
 					group = lint_augroup,
 					callback = function()
 						if vim.opt_local.modifiable:get() then
@@ -631,66 +635,66 @@ lazy.setup({
 
 		-- LSP
 		{
-			"folke/lazydev.nvim",
-			ft = "lua",
+			'folke/lazydev.nvim',
+			ft = 'lua',
 			opts = {
 				library = {
 					{
-						path = "luvit-meta/library",
-						words = { "vim%.uv" },
+						path = 'luvit-meta/library',
+						words = { 'vim%.uv' },
 					},
 				},
 			},
 		},
 		{
-			"folke/trouble.nvim",
+			'folke/trouble.nvim',
 			opts = {},
-			cmd = "Trouble",
+			cmd = 'Trouble',
 			keys = {
 				{
-					"<leader>xx",
-					"<cmd>Trouble diagnostics toggle<cr>",
-					desc = "Diagnostics (Trouble)",
+					'<leader>xx',
+					'<cmd>Trouble diagnostics toggle<cr>',
+					desc = 'Diagnostics (Trouble)',
 				},
 				{
-					"<leader>xX",
-					"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-					desc = "Buffer Diagnostics (Trouble)",
+					'<leader>xX',
+					'<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
+					desc = 'Buffer Diagnostics (Trouble)',
 				},
 				{
-					"<leader>cs",
-					"<cmd>Trouble symbols toggle focus=false<cr>",
-					desc = "Symbols (Trouble)",
+					'<leader>cs',
+					'<cmd>Trouble symbols toggle focus=false<cr>',
+					desc = 'Symbols (Trouble)',
 				},
 				{
-					"<leader>cl",
-					"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-					desc = "LSP Definitions / references / ... (Trouble)",
+					'<leader>cl',
+					'<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+					desc = 'LSP Definitions / references / ... (Trouble)',
 				},
 				{
-					"<leader>xL",
-					"<cmd>Trouble loclist toggle<cr>",
-					desc = "Location List (Trouble)",
+					'<leader>xL',
+					'<cmd>Trouble loclist toggle<cr>',
+					desc = 'Location List (Trouble)',
 				},
 				{
-					"<leader>xQ",
-					"<cmd>Trouble qflist toggle<cr>",
-					desc = "Quickfix List (Trouble)",
+					'<leader>xQ',
+					'<cmd>Trouble qflist toggle<cr>',
+					desc = 'Quickfix List (Trouble)',
 				},
 			},
 		},
-		{ "Bilal2453/luvit-meta", lazy = true },
+		{ 'Bilal2453/luvit-meta', lazy = true },
 		{
-			"neovim/nvim-lspconfig",
+			'neovim/nvim-lspconfig',
 			dependencies = {
 				{
-					"williamboman/mason.nvim",
+					'williamboman/mason.nvim',
 					config = true,
 				},
-				"williamboman/mason-lspconfig.nvim",
-				"WhoIsSethDaniel/mason-tool-installer.nvim",
+				'williamboman/mason-lspconfig.nvim',
+				'WhoIsSethDaniel/mason-tool-installer.nvim',
 				{
-					"j-hui/fidget.nvim",
+					'j-hui/fidget.nvim',
 					opts = {
 						progress = {
 							suppress_on_insert = true,
@@ -705,68 +709,61 @@ lazy.setup({
 					},
 				},
 
-				"hrsh7th/cmp-nvim-lsp",
+				'hrsh7th/cmp-nvim-lsp',
 			},
 			config = function()
-				vim.api.nvim_create_autocmd("LspAttach", {
-					group = vim.api.nvim_create_augroup("mothzarella-lsp-attach", { clear = true }),
+				vim.api.nvim_create_autocmd('LspAttach', {
+					group = vim.api.nvim_create_augroup('mothzarella-lsp-attach', { clear = true }),
 					callback = function(event)
 						local map = function(keys, func, desc, mode)
-							mode = mode or "n"
-							vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+							mode = mode or 'n'
+							vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
 						end
 
 						-- remap
-						map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
+						map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
-						map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
+						map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
-						map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
+						map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
 
-						map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
+						map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
 
-						map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
+						map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
 
-						map(
-							"<leader>ws",
-							require("telescope.builtin").lsp_dynamic_workspace_symbols,
-							"[W]orkspace [S]ymbols"
-						)
+						map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
-						map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+						map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
 
-						map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
+						map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
 						-- WARN: This is not Goto Definition, this is Goto Declaration.
 						--  For example, in C this would take you to the header.
-						map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+						map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
 						local client = vim.lsp.get_client_by_id(event.data.client_id)
-						if
-							client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight)
-						then
-							local highlight_augroup =
-								vim.api.nvim_create_augroup("mothzarella-lsp-highlight", { clear = false })
-							vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+						if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+							local highlight_augroup = vim.api.nvim_create_augroup('mothzarella-lsp-highlight', { clear = false })
+							vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
 								buffer = event.buf,
 								group = highlight_augroup,
 								callback = vim.lsp.buf.document_highlight,
 							})
 
-							vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+							vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
 								buffer = event.buf,
 								group = highlight_augroup,
 								callback = vim.lsp.buf.clear_references,
 							})
 
-							vim.api.nvim_create_autocmd("LspDetach", {
-								group = vim.api.nvim_create_augroup("mothzarella-lsp-detach", { clear = true }),
+							vim.api.nvim_create_autocmd('LspDetach', {
+								group = vim.api.nvim_create_augroup('mothzarella-lsp-detach', { clear = true }),
 								callback = function(event2)
 									vim.lsp.buf.clear_references()
-									vim.api.nvim_clear_autocmds({
-										group = "mothzarella-lsp-highlight",
+									vim.api.nvim_clear_autocmds {
+										group = 'mothzarella-lsp-highlight',
 										buffer = event2.buf,
-									})
+									}
 								end,
 							})
 						end
@@ -776,25 +773,24 @@ lazy.setup({
 							vim.lsp.inlay_hint.enable(true, { bufnr = 0 })
 
 							-- remap
-							map("<leader>th", function()
-								vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-							end, "[T]oggle Inlay [H]ints")
+							map('<leader>th', function()
+								vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
+							end, '[T]oggle Inlay [H]ints')
 						end
 					end,
 				})
 
 				if vim.g.have_nerd_font then
-					local signs = { Error = "󰅙", Info = "󰋼", Hint = "󰌵", Warn = "" }
+					local signs = { Error = '󰅙', Info = '󰋼', Hint = '󰌵', Warn = '' }
 
 					for name, icon in pairs(signs) do
-						local hl = "DiagnosticSign" .. name
+						local hl = 'DiagnosticSign' .. name
 						vim.fn.sign_define(hl, { text = icon, numhl = hl, texthl = hl })
 					end
 				end
 
 				local capabilities = vim.lsp.protocol.make_client_capabilities()
-				capabilities =
-					vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
+				capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
 				local servers = {
 					-- lua ( require man-db )
@@ -802,12 +798,21 @@ lazy.setup({
 						settings = {
 							Lua = {
 								completion = {
-									callSnippet = "Replace",
+									callSnippet = 'Replace',
 								},
 								hint = {
 									enable = true,
-									arrayIndex = "Disable",
+									arrayIndex = 'Disable',
 								},
+							},
+						},
+					},
+
+					-- bash
+					bashls = {
+						settings = {
+							bashIde = {
+								globPattern = '*@(.sh|.inc|.bash|.command)',
 							},
 						},
 					},
@@ -839,8 +844,8 @@ lazy.setup({
 						settings = {
 							python = {
 								analysis = {
-									typeCheckingMode = "basic",
-									diagnosticMode = "workspace",
+									typeCheckingMode = 'basic',
+									diagnosticMode = 'workspace',
 									inlayHints = {
 										variableTypes = true,
 										callArgumentNames = true,
@@ -855,7 +860,7 @@ lazy.setup({
 					-- rust
 					rust_analyzer = {
 						settings = {
-							["rust-analyzer"] = {
+							['rust-analyzer'] = {
 								diagnostics = {
 									enable = true,
 									experimental = {
@@ -869,9 +874,9 @@ lazy.setup({
 								},
 								imports = {
 									granularity = {
-										group = "module",
+										group = 'module',
 									},
-									prefix = "self",
+									prefix = 'self',
 								},
 								inlayHints = {
 									chainingHints = true,
@@ -885,27 +890,41 @@ lazy.setup({
 						},
 					},
 
+					-- graphql
+					graphql = {
+						filetypes = { 'graphql' },
+					},
+
 					-- typescript / javascript
 					ts_ls = {
 						filetypes = {
-							"javascript",
-							"javascriptreact",
-							"javascript.jsx",
-							"typescript",
-							"typescriptreact",
-							"typescript.tsx",
+							'javascript',
+							'javascriptreact',
+							'javascript.jsx',
+							'typescript',
+							'typescriptreact',
+							'typescript.tsx',
 						},
 						single_file_support = true,
 						init_options = {
 							preferences = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
+								-- format
+								indentStyle = 'Smart',
+
+								-- inlayHints
 								includeInlayEnumMemberValueHints = true,
-								importModuleSpecifierPreference = "non-relative",
+								includeInlayFunctionLikeReturnTypeHints = true,
+								includeInlayFunctionParameterTypeHints = true,
+								includeInlayParameterNameHints = 'all', -- 'none' | 'literals' | 'all'
+								includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+								includeInlayPropertyDeclarationTypeHints = true,
+								includeInlayVariableTypeHints = true,
+								includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+
+								-- lens
+								implementationsCodeLens = {
+									enabled = true,
+								},
 							},
 						},
 					},
@@ -923,7 +942,7 @@ lazy.setup({
 
 					-- css / scss / less
 					cssls = {
-						filetypes = { "css", "scss", "less" },
+						filetypes = { 'css', 'scss', 'less' },
 						settings = {
 							css = { validate = true },
 							less = { validate = true },
@@ -934,73 +953,86 @@ lazy.setup({
 					-- c/c++
 					clangd = {
 						cmd = {
-							"clangd",
-							"--fallback-style=webkit",
+							'clangd',
+							'--fallback-style=webkit',
 						},
-						filetypes = { "c", "cpp" },
+						filetypes = { 'c', 'cpp' },
+					},
+
+					-- docker (dockerfile)
+					dockerls = {
+						filetypes = { 'dockerfile' },
+						settings = {
+							docker = {
+								languageserver = {
+									formatter = {
+										ignoreMultilineInstructions = true,
+									},
+								},
+							},
+						},
 					},
 				}
 
-				require("mason").setup()
+				require('mason').setup()
 
 				local ensure_installed = vim.tbl_keys(servers or {})
 				vim.list_extend(ensure_installed, {
 					-- formatters
-					"stylua", -- require unzip
-					"goimports",
-					"black",
-					"prettier",
+					'stylua', -- require unzip
+					'goimports',
+					'black',
+					'prettier',
 
 					-- DAP
-					"delve",
-					"codelldb",
+					'delve',
+					'codelldb',
 				})
-				require("mason-tool-installer").setup({
+				require('mason-tool-installer').setup {
 					ensure_installed = ensure_installed,
 					auto_update = true,
-				})
+				}
 
-				require("mason-lspconfig").setup({
+				require('mason-lspconfig').setup {
 					ensure_installed = {},
-					automatic_installation = false,
+					automatic_installation = true,
 					handlers = {
 						function(server_name)
 							local server = servers[server_name] or {}
-							server.capabilities =
-								vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-							require("lspconfig")[server_name].setup(server)
+							server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+							require('lspconfig')[server_name].setup(server)
 						end,
 					},
-				})
+				}
 			end,
 		},
 
 		-- lualine
 		{
-			"nvim-lualine/lualine.nvim",
+			'nvim-lualine/lualine.nvim',
 			config = function()
-				local colors = dofile(vim.g.base46_cache .. "colors")
-				require("lualine").setup({
+				local colors = dofile(vim.g.base46_cache .. 'colors')
+				require('lualine').setup {
 					options = {
 						icons_enabled = true,
-						component_separators = "",
-						section_separators = { left = "", right = "" },
+						component_separators = '',
+						section_separators = { left = '', right = '' },
 					},
 					sections = {
 						lualine_a = {
 							{
-								"mode",
-								icon = "",
+								'mode',
+								icon = '',
 								color = {
 									bg = colors.purple,
-									gui = "bold",
+									gui = 'bold',
 								},
 							},
 						},
 						lualine_b = {
 							{
-								"branch",
-								icon = "",
+								'branch',
+								icon = '',
 								color = {
 									fg = colors.purple,
 									bg = colors.black,
@@ -1009,27 +1041,27 @@ lazy.setup({
 						},
 						lualine_c = {
 							{
-								"filename",
+								'filename',
 								file_status = true,
 								newfile_status = false,
 								color = { fg = colors.grey_fg },
 								symbols = {
-									modified = "󱗝 ",
-									readonly = " ",
+									modified = '󱗝 ',
+									readonly = ' ',
 								},
 							},
 						},
 						lualine_x = {
 							{
-								"diagnostics",
-								sources = { "nvim_diagnostic" },
-								symbols = { error = " ", warn = " ", info = " " },
+								'diagnostics',
+								sources = { 'nvim_diagnostic' },
+								symbols = { error = ' ', warn = ' ', info = ' ' },
 							},
-							{ "filetype", icon_only = true },
+							{ 'filetype', icon_only = true },
 						},
 						lualine_y = {
 							{
-								"progress",
+								'progress',
 								color = {
 									fg = colors.purple,
 									bg = colors.black,
@@ -1038,89 +1070,89 @@ lazy.setup({
 						},
 						lualine_z = {
 							{
-								"location",
+								'location',
 								color = {
 									bg = colors.purple,
-									gui = "bold",
+									gui = 'bold',
 								},
 							},
 						},
 					},
-				})
+				}
 			end,
 		},
 
 		-- markdown
 		{
-			"MeanderingProgrammer/markdown.nvim",
-			ft = { "markdown", "Avante", "vimwiki" },
+			'MeanderingProgrammer/markdown.nvim',
+			ft = { 'markdown', 'Avante', 'vimwiki' },
 			opts = {
-				file_types = { "markdown", "Avante", "vimwiki" },
+				file_types = { 'markdown', 'Avante', 'vimwiki' },
 			},
 		},
 
 		-- nvchad
-		"nvim-lua/plenary.nvim",
-		{ "nvim-tree/nvim-web-devicons", lazy = true },
+		'nvim-lua/plenary.nvim',
+		{ 'nvim-tree/nvim-web-devicons', lazy = true },
 
 		{
-			"nvchad/ui",
+			'nvchad/ui',
 			config = function()
-				require("nvchad")
+				require 'nvchad'
 			end,
 		},
 
 		{
-			"nvchad/base46",
+			'nvchad/base46',
 			lazy = true,
 			build = function()
-				require("base46").load_all_highlights()
+				require('base46').load_all_highlights()
 			end,
 		},
 
-		"nvchad/volt",
+		'nvchad/volt',
 
 		-- telescope
 		{
-			"nvim-telescope/telescope.nvim",
-			event = "VimEnter",
-			branch = "0.1.x",
+			'nvim-telescope/telescope.nvim',
+			event = 'VimEnter',
+			branch = '0.1.x',
 			dependencies = {
-				"nvim-lua/plenary.nvim",
+				'nvim-lua/plenary.nvim',
 				{
-					"nvim-telescope/telescope-fzf-native.nvim",
-					build = "make",
+					'nvim-telescope/telescope-fzf-native.nvim',
+					build = 'make',
 				},
 				{
-					"rmagatti/auto-session",
-					dependencies = { "nvim-telescope/telescope.nvim" },
+					'rmagatti/auto-session',
+					dependencies = { 'nvim-telescope/telescope.nvim' },
 					config = function()
-						require("auto-session").setup({
+						require('auto-session').setup {
 							enabled = true,
 							auto_save = true,
-							suppressed_dirs = { "~/", "/" },
+							suppressed_dirs = { '~/', '/' },
 							session_lens = {
 								mappings = {
-									delete_session = { { "i", "n" }, "<C-d>" },
+									delete_session = { { 'i', 'n' }, '<C-d>' },
 								},
 							},
-						})
+						}
 					end,
 				},
 			},
 			config = function()
-				local telescope = require("telescope")
-				local builtin = require("telescope.builtin")
-				local actions = require("telescope.actions")
-				pcall(telescope.load_extension, "fzf")
+				local telescope = require 'telescope'
+				local builtin = require 'telescope.builtin'
+				local actions = require 'telescope.actions'
+				pcall(telescope.load_extension, 'fzf')
 
-				telescope.setup({
+				telescope.setup {
 					defaults = {
 						winblend = 0,
 						mappings = {
 							n = {
-								["q"] = actions.close,
-								["l"] = actions.select_default,
+								['q'] = actions.close,
+								['l'] = actions.select_default,
 							},
 						},
 					},
@@ -1129,95 +1161,95 @@ lazy.setup({
 							sort_lastused = true,
 							mappings = {
 								i = {
-									["<C-d>"] = actions.delete_buffer,
+									['<C-d>'] = actions.delete_buffer,
 								},
 								n = {
-									["<C-d>"] = actions.delete_buffer,
+									['<C-d>'] = actions.delete_buffer,
 								},
 							},
 						},
 					},
-				})
+				}
 
 				-- session
-				telescope.load_extension("session-lens")
+				telescope.load_extension 'session-lens'
 
 				-- remap
-				vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find [F]iles" })
-				vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live [G]rep" })
-				vim.keymap.set("n", "<leader>fd", builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
-				vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[ ] Find existing buffers" })
+				vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Find [F]iles' })
+				vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Live [G]rep' })
+				vim.keymap.set('n', '<leader>fd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+				vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
 				-- session
-				vim.keymap.set("n", "<leader>fs", "<cmd>SessionSearch<CR>", { desc = "Search [S]ession" })
+				vim.keymap.set('n', '<leader>fs', '<cmd>SessionSearch<CR>', { desc = 'Search [S]ession' })
 
 				-- nvim files
-				vim.keymap.set("n", "<leader>fn", function()
-					builtin.find_files({ cwd = vim.fn.stdpath("config") })
-				end, { desc = "[S]earch [N]eovim files" })
+				vim.keymap.set('n', '<leader>fn', function()
+					builtin.find_files { cwd = vim.fn.stdpath 'config' }
+				end, { desc = '[S]earch [N]eovim files' })
 
 				-- fzf
-				vim.keymap.set("n", "<leader>/", function()
-					builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
+				vim.keymap.set('n', '<leader>/', function()
+					builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
 						previewer = false,
-					}))
-				end, { desc = "[/] Fuzzily search in current buffer" })
+					})
+				end, { desc = '[/] Fuzzily search in current buffer' })
 			end,
 		},
 
 		-- transparent
 		{
-			"xiyaowong/nvim-transparent",
+			'xiyaowong/nvim-transparent',
 			lazy = false,
 			opts = {
 				extra_groups = {
-					"barbecue_normal",
-					"barbecue_ellipsis",
-					"barbecue_separator",
-					"barbecue_modified",
-					"barbecue_dirname",
-					"barbecue_basename",
-					"barbecue_context",
-					"barbecue_context_file",
-					"barbecue_context_module",
-					"barbecue_context_namespace",
-					"barbecue_context_package",
-					"barbecue_context_class",
-					"barbecue_context_method",
-					"barbecue_context_property",
-					"barbecue_context_field",
-					"barbecue_context_constructor",
-					"barbecue_context_enum",
-					"barbecue_context_interface",
-					"barbecue_context_function",
-					"barbecue_context_variable",
-					"barbecue_context_constant",
-					"barbecue_context_string",
-					"barbecue_context_number",
-					"barbecue_context_boolean",
-					"barbecue_context_array",
-					"barbecue_context_object",
-					"barbecue_context_key",
-					"barbecue_context_null",
-					"barbecue_context_enum_member",
-					"barbecue_context_struct",
-					"barbecue_context_event",
-					"barbecue_context_operator",
-					"barbecue_context_type_parameter",
-					"TroubleNormal",
-					"TroubleNormalNC",
+					'barbecue_normal',
+					'barbecue_ellipsis',
+					'barbecue_separator',
+					'barbecue_modified',
+					'barbecue_dirname',
+					'barbecue_basename',
+					'barbecue_context',
+					'barbecue_context_file',
+					'barbecue_context_module',
+					'barbecue_context_namespace',
+					'barbecue_context_package',
+					'barbecue_context_class',
+					'barbecue_context_method',
+					'barbecue_context_property',
+					'barbecue_context_field',
+					'barbecue_context_constructor',
+					'barbecue_context_enum',
+					'barbecue_context_interface',
+					'barbecue_context_function',
+					'barbecue_context_variable',
+					'barbecue_context_constant',
+					'barbecue_context_string',
+					'barbecue_context_number',
+					'barbecue_context_boolean',
+					'barbecue_context_array',
+					'barbecue_context_object',
+					'barbecue_context_key',
+					'barbecue_context_null',
+					'barbecue_context_enum_member',
+					'barbecue_context_struct',
+					'barbecue_context_event',
+					'barbecue_context_operator',
+					'barbecue_context_type_parameter',
+					'TroubleNormal',
+					'TroubleNormalNC',
 				},
 			},
 			config = function(_, opts)
-				local transparent = require("transparent")
+				local transparent = require 'transparent'
 				transparent.setup(opts)
 
 				-- force transparent enabled
 				if vim.g.transparent_enabled == false then
-					vim.cmd(":TransparentEnable")
+					vim.cmd ':TransparentEnable'
 				end
 
-				local lines = { "lualine_c", "lualine_x" }
+				local lines = { 'lualine_c', 'lualine_x' }
 				for _, line in ipairs(lines) do
 					transparent.clear_prefix(line)
 				end
@@ -1226,93 +1258,93 @@ lazy.setup({
 
 		-- treesitter
 		{
-			"nvim-treesitter/nvim-treesitter",
-			build = ":TSUpdate",
-			main = "nvim-treesitter.configs",
+			'nvim-treesitter/nvim-treesitter',
+			build = ':TSUpdate',
+			main = 'nvim-treesitter.configs',
 			opts = {
 				ensure_installed = {
-					"bash",
-					"c",
-					"diff",
-					"go",
-					"html",
-					"json",
-					"javascript",
-					"lua",
-					"luadoc",
-					"markdown",
-					"markdown_inline",
-					"python",
-					"query",
-					"rust",
-					"toml",
-					"typescript",
-					"yaml",
-					"vim",
-					"vimdoc",
+					'bash',
+					'c',
+					'diff',
+					'go',
+					'html',
+					'json',
+					'javascript',
+					'lua',
+					'luadoc',
+					'markdown',
+					'markdown_inline',
+					'python',
+					'query',
+					'rust',
+					'toml',
+					'typescript',
+					'yaml',
+					'vim',
+					'vimdoc',
 				},
 				auto_install = true,
 				highlight = {
 					enable = true,
-					additional_vim_regex_highlighting = { "ruby" },
+					additional_vim_regex_highlighting = { 'ruby' },
 				},
-				indent = { enable = true, disable = { "ruby" } },
+				indent = { enable = true, disable = { 'ruby' } },
 			},
 			config = function(_, opts)
-				dofile(vim.g.base46_cache .. "treesitter")
-				require("nvim-treesitter.configs").setup(opts)
+				dofile(vim.g.base46_cache .. 'treesitter')
+				require('nvim-treesitter.configs').setup(opts)
 			end,
 		},
 
 		-- undotree
 		{
-			"mbbill/undotree",
+			'mbbill/undotree',
 			keys = {
 				{
-					"<leader>u",
-					"<cmd>UndotreeToggle<CR>",
-					desc = "Toggle [U]ndo Tree",
+					'<leader>u',
+					'<cmd>UndotreeToggle<CR>',
+					desc = 'Toggle [U]ndo Tree',
 				},
 			},
 		},
 
 		-- zen
 		{
-			"folke/zen-mode.nvim",
-			cmd = "ZenMode",
+			'folke/zen-mode.nvim',
+			cmd = 'ZenMode',
 			dependencies = {
 				{
-					"folke/twilight.nvim",
+					'folke/twilight.nvim',
 					keys = {
 						{
-							"<leader>zt",
-							"<cmd>Twilight<cr>",
-							desc = "[Z]en [T]wilight",
+							'<leader>zt',
+							'<cmd>Twilight<cr>',
+							desc = '[Z]en [T]wilight',
 						},
 					},
 				},
 			},
 			keys = {
 				{
-					"<leader>zz",
-					"<cmd>ZenMode<cr>",
-					desc = "[Z]en Mode",
+					'<leader>zz',
+					'<cmd>ZenMode<cr>',
+					desc = '[Z]en Mode',
 				},
 			},
 			config = function()
-				require("zen-mode").setup({
+				require('zen-mode').setup {
 					window = {
 						backdrop = 1,
 						width = 120,
 						height = 1,
 					},
-				})
+				}
 			end,
 		},
 	},
-	install = { colorscheme = { "nvchad" } },
+	install = { colorscheme = { 'nvchad' } },
 	checker = { enabled = true },
-})
+}
 
 -- nvchad.ui
 for _, v in ipairs(vim.fn.readdir(vim.g.base46_cache)) do
