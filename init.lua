@@ -17,10 +17,6 @@ vim.opt.rtp:prepend(lazypath)
 
 vim.o.laststatus = 3
 
-vim.o.winbar = "%{%v:lua.require'nvim-navic'.get_location()%}"
-
-vim.api.nvim_set_hl(0, 'WinBarNC', { bold = true })
-
 --- Make sure to setup `mapleader` and `maplocalleader` before
 --- loading lazy.nvim so that mappings are correct.
 --- This is also a good place to setup other settings (vim.opt)
@@ -39,8 +35,7 @@ vim.g.borders = {
   { ' ', 'FloatBorder' },
 }
 
---- Set to true if ure using declarative distros like NixOS
-vim.g.local_lsp = false
+vim.o.termguicolors = true
 
 --- Make line numbers default
 vim.o.number = true
@@ -79,16 +74,266 @@ vim.keymap.set({ 'n', 'v' }, '<leader>y', [["+y]])
 -- Setup lazy.nvim
 require('lazy').setup {
   spec = {
-    'tpope/vim-sleuth',
     {
-      'sainnhe/gruvbox-material',
-      priority = 1000,
+      'miroshQa/debugmaster.nvim',
+      dependencies = {
+        'mfussenegger/nvim-dap',
+        'jay-babu/mason-nvim-dap.nvim',
+        'leoluz/nvim-dap-go',
+      },
       config = function()
-        vim.o.background = 'dark'
-        vim.g.gruvbox_material_foreground = 'mix'
-        vim.cmd [[colorscheme gruvbox-material]]
+        local dm = require 'debugmaster'
+        local dap = require 'dap'
+
+        --- Remap
+        vim.keymap.set({ 'n', 'v' }, '<leader>d', dm.mode.toggle, { nowait = true })
+        vim.keymap.set('t', '<C-/>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+        require('mason-nvim-dap').setup {
+          --- Makes a best effort to setup the various debuggers with
+          --- reasonable debug configurations
+          automatic_installation = true,
+
+          --- See mason-nvim-dap README for more information
+          handlers = {},
+
+          ensure_installed = {
+            'delve',
+          },
+        }
+
+        --- Install golang specific config
+        require('dap-go').setup {
+          delve = {
+            --- On Windows delve must be run attached or it crashes.
+            --- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
+            detached = vim.fn.has 'win32' == 0,
+          },
+        }
       end,
     },
+    'tpope/vim-sleuth',
+    {
+      'OXY2DEV/markview.nvim',
+      lazy = false,
+      --- Remap
+      keys = {
+        { '<leader>tm', '<cmd>Markview toggle<cr>', desc = '[T]oggle [M]arkdown' },
+      },
+    },
+    {
+      'christoomey/vim-tmux-navigator',
+      cmd = {
+        'TmuxNavigateLeft',
+        'TmuxNavigateDown',
+        'TmuxNavigateUp',
+        'TmuxNavigateRight',
+        'TmuxNavigatePrevious',
+        'TmuxNavigatorProcessList',
+      },
+      keys = {
+        { '<c-h>', '<cmd><C-U>TmuxNavigateLeft<cr>' },
+        { '<c-j>', '<cmd><C-U>TmuxNavigateDown<cr>' },
+        { '<c-k>', '<cmd><C-U>TmuxNavigateUp<cr>' },
+        { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
+        { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
+      },
+    },
+    {
+      'rebelot/heirline.nvim',
+      config = function()
+        local conditions = require 'heirline.conditions'
+        local utils = require 'heirline.utils'
+
+        local colors = {
+          bright_bg = utils.get_highlight('Folded').bg,
+          bright_fg = utils.get_highlight('Folded').fg,
+          red = utils.get_highlight('DiagnosticError').fg,
+          dark_red = utils.get_highlight('DiffDelete').bg,
+          green = utils.get_highlight('String').fg,
+          blue = utils.get_highlight('Function').fg,
+          gray = utils.get_highlight('NonText').fg,
+          orange = utils.get_highlight('Constant').fg,
+          purple = utils.get_highlight('Statement').fg,
+          cyan = utils.get_highlight('Special').fg,
+          diag_warn = utils.get_highlight('DiagnosticWarn').fg,
+          diag_error = utils.get_highlight('DiagnosticError').fg,
+          diag_hint = utils.get_highlight('DiagnosticHint').fg,
+          diag_info = utils.get_highlight('DiagnosticInfo').fg,
+          git_del = utils.get_highlight('diffDeleted').fg,
+          git_add = utils.get_highlight('diffAdded').fg,
+          git_change = utils.get_highlight('diffChanged').fg,
+        }
+
+        local Navic = {
+          condition = function()
+            return require('nvim-navic').is_available()
+          end,
+          static = {
+            --- Type highlight map
+            type_hl = {
+              File = 'Directory',
+              Module = '@include',
+              Namespace = '@namespace',
+              Package = '@include',
+              Class = '@structure',
+              Method = '@method',
+              Property = '@property',
+              Field = '@field',
+              Constructor = '@constructor',
+              Enum = '@field',
+              Interface = '@type',
+              Function = '@function',
+              Variable = '@variable',
+              Constant = '@constant',
+              String = '@string',
+              Number = '@number',
+              Boolean = '@boolean',
+              Array = '@field',
+              Object = '@type',
+              Key = '@keyword',
+              Null = '@comment',
+              EnumMember = '@field',
+              Struct = '@structure',
+              Event = '@keyword',
+              Operator = '@operator',
+              TypeParameter = '@type',
+            },
+            --- bit operation dark magic, see below...
+            enc = function(line, col, winnr)
+              return bit.bor(bit.lshift(line, 16), bit.lshift(col, 6), winnr)
+            end,
+            --- line: 16 bit (65535); col: 10 bit (1023); winnr: 6 bit (63)
+            dec = function(c)
+              local line = bit.rshift(c, 16)
+              local col = bit.band(bit.rshift(c, 6), 1023)
+              local winnr = bit.band(c, 63)
+              return line, col, winnr
+            end,
+          },
+          init = function(self)
+            local data = require('nvim-navic').get_data() or {}
+            local children = {}
+            --- create a child for each level
+            for i, d in ipairs(data) do
+              --- encode line and column numbers into a single integer
+              local pos = self.enc(d.scope.start.line, d.scope.start.character, self.winnr)
+              local child = {
+                {
+                  provider = d.icon,
+                  hl = self.type_hl[d.type],
+                },
+                {
+                  --- escape `%`s (elixir) and buggy default separators
+                  provider = d.name:gsub('%%', '%%%%'):gsub('%s*->%s*', ''),
+                  --- highlight icon only or location name as well
+                  --- hl = self.type_hl[d.type],
+
+                  on_click = {
+                    --- pass the encoded position through minwid
+                    minwid = pos,
+                    callback = function(_, minwid)
+                      --- decode
+                      local line, col, winnr = self.dec(minwid)
+                      vim.api.nvim_win_set_cursor(vim.fn.win_getid(winnr), { line, col })
+                    end,
+                    name = 'heirline_navic',
+                  },
+                },
+              }
+              --- add a separator only if needed
+              if #data > 1 and i < #data then
+                table.insert(child, {
+                  provider = ' > ',
+                  hl = { fg = 'bright_fg' },
+                })
+              end
+              table.insert(children, child)
+            end
+            --- instantiate the new child, overwriting the previous one
+            self.child = self:new(children, 1)
+          end,
+          --- evaluate the children containing navic components
+          provider = function(self)
+            return self.child:eval()
+          end,
+          hl = { fg = 'gray' },
+          update = 'CursorMoved',
+        }
+
+        local FileType = {
+          provider = function()
+            return ' ' .. string.upper(vim.bo.filetype) .. ' '
+          end,
+          hl = { fg = utils.get_highlight('Type').fg, bold = true },
+        }
+
+        local ScrollBar = {
+          static = { sbar = { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█' } },
+          { provider = ' %P ' },
+          {
+            provider = function(self)
+              local curr_line = vim.api.nvim_win_get_cursor(0)[1]
+              local lines = vim.api.nvim_buf_line_count(0)
+              local i = math.floor((curr_line - 1) / lines * #self.sbar) + 1
+              return string.rep(self.sbar[i], 2)
+            end,
+            hl = { fg = 'pink' },
+          },
+          { provider = ' ' },
+        }
+
+        require('heirline').setup {
+          winbar = { Navic },
+
+          statusline = { FileType, { provider = '%=' }, ScrollBar },
+          opts = {
+            colors = colors,
+            disable_winbar_cb = function(args)
+              return conditions.buffer_matches({
+                buftype = { 'nofile', 'prompt', 'help', 'quickfix' },
+                filetype = { '^git.*', 'fugitive', 'Trouble', 'dashboard', 'oil', 'fzf' },
+              }, args.buf)
+            end,
+          },
+        }
+      end,
+    },
+
+    --- colorsheme
+    {
+      'luisiacc/gruvbox-baby',
+      priority = 1000,
+      lazy = false,
+      config = function()
+        vim.o.background = 'dark'
+        vim.cmd [[colorscheme gruvbox-baby]]
+
+        --- Override hl
+        vim.api.nvim_create_autocmd('BufEnter', {
+          group = vim.api.nvim_create_augroup('colorscheme', { clear = true }),
+          callback = function()
+            local hl = function(name, api)
+              vim.api.nvim_set_hl(0, name, api)
+            end
+
+            --- Fzf
+            hl('FzfLuaBorder', { link = 'NormalFloat' })
+            hl('FzfLuaNormal', { link = 'NormalFloat' })
+
+            --- Float
+            hl('Pmenu', { link = 'NormalFloat' })
+            hl('PmenuSbar', { link = 'NormalFloat' }) --- Better look Pmenu scroll
+
+            --- Winbar
+            hl('Winbar', { bg = 'NONE' })
+            hl('WinbarNC', { link = 'WinBar' })
+          end,
+        })
+      end,
+    },
+
+    --- explorer
     {
       'stevearc/oil.nvim',
       lazy = false,
@@ -126,23 +371,13 @@ require('lazy').setup {
           },
         }
 
-        vim.keymap.set('n', '<leader>e', function()
-          oil.toggle_float()
-        end, { desc = 'Oil: [E]xplore' })
+        vim.keymap.set('n', '<leader>e', oil.toggle_float, { desc = 'Oil: [E]xplore' })
       end,
     },
-    {
-      'lewis6991/gitsigns.nvim',
-      opts = {
-        signs = {
-          add = { text = '+' },
-          change = { text = '~' },
-          delete = { text = '_' },
-          topdelete = { text = '‾' },
-          changedelete = { text = '~' },
-        },
-      },
-    },
+
+    --- Git integration
+    { 'lewis6991/gitsigns.nvim', opts = {} },
+
     {
       'echasnovski/mini.nvim',
       version = '*', --- Stable version
@@ -150,41 +385,69 @@ require('lazy').setup {
         --- Icons
         ---@see https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md
         require('mini.icons').setup()
-
-        --- Statusline
-        ---@see https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-statusline.md
-        local statusline = require 'mini.statusline'
-        statusline.setup { use_icons = true }
-
-        ---@diagnostic disable-next-line: duplicate-set-field
-        statusline.section_location = function()
-          ---@see https://github.com/rebelot/heirline.nvim/blob/master/cookbook.md#cursor-position-ruler-and-scrollbar
-          local sbar = { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█' }
-
-          local curr_line = vim.api.nvim_win_get_cursor(0)[1]
-          local lines = vim.api.nvim_buf_line_count(0)
-          local i = math.floor((curr_line - 1) / lines * #sbar) + 1
-          return '%2P ' .. string.rep(sbar[i], 2)
-        end
       end,
     },
 
+    --- hl colors
     {
-      'MeanderingProgrammer/render-markdown.nvim',
-      dependencies = { 'echasnovski/mini.nvim' },
-      ---@module 'render-markdown'
+      'brenoprata10/nvim-highlight-colors',
       opts = {
-        file_types = { 'markdown', 'vimwiki' },
-        completions = {
-          lsp = { enabled = true },
-          blink = { enabled = true },
-        },
+        ---Render style
+        ---@usage 'background'|'foreground'|'virtual'
+        render = 'virtual',
+
+        ---Set virtual symbol (requires render to be set to 'virtual')
+        virtual_symbol = '󱓻',
+
+        ---Set virtual symbol suffix (defaults to '')
+        virtual_symbol_prefix = '',
+
+        ---Set virtual symbol suffix (defaults to ' ')
+        virtual_symbol_suffix = ' ',
+
+        ---Set virtual symbol position()
+        ---@usage 'inline'|'eol'|'eow'
+        ---inline mimics VS Code style
+        ---eol stands for `end of column` - Recommended to set `virtual_symbol_suffix = ''` when used.
+        ---eow stands for `end of word` - Recommended to set `virtual_symbol_prefix = ' ' and virtual_symbol_suffix = ''` when used.
+        virtual_symbol_position = 'inline',
+
+        ---Highlight hex colors, e.g. '#FFFFFF'
+        enable_hex = true,
+
+        ---Highlight short hex colors e.g. '#fff'
+        enable_short_hex = true,
+
+        ---Highlight rgb colors, e.g. 'rgb(0 0 0)'
+        enable_rgb = true,
+
+        ---Highlight hsl colors, e.g. 'hsl(150deg 30% 40%)'
+        enable_hsl = true,
+
+        ---Highlight ansi colors, e.g '\033[0;34m'
+        enable_ansi = true,
+
+        --- Highlight hsl colors without function, e.g. '--foreground: 0 69% 69%;'
+        enable_hsl_without_function = true,
+
+        ---Highlight CSS variables, e.g. 'var(--testing-color)'
+        enable_var_usage = true,
+
+        ---Highlight named colors, e.g. 'green'
+        enable_named_colors = true,
+
+        ---Highlight tailwind colors, e.g. 'bg-blue-500'
+        enable_tailwind = true,
       },
-      config = function(_, opts)
-        require('render-markdown').setup(opts)
-      end,
     },
+
+    --- Comments
     { 'numToStr/Comment.nvim', opts = {} },
+    {
+      'folke/todo-comments.nvim',
+      dependencies = { 'nvim-lua/plenary.nvim' },
+      opts = {},
+    },
 
     --- Fuzzy Finder
     {
@@ -209,12 +472,10 @@ require('lazy').setup {
         local fzf = require 'fzf-lua'
         fzf.setup(opts)
 
-        vim.api.nvim_set_hl(0, 'FzfLuaBorder', { link = 'NormalFloat' })
-        vim.api.nvim_set_hl(0, 'FzfLuaNormal', { link = 'NormalFloat' })
-
         vim.api.nvim_create_autocmd('BufEnter', {
           group = vim.api.nvim_create_augroup('fzf.enter', { clear = true }),
           callback = function(event)
+            --- Remap
             local map = function(keys, func, desc, mode)
               mode = mode or 'n'
               vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'Fzf: ' .. desc })
@@ -255,78 +516,108 @@ require('lazy').setup {
 
         --- Simple winbar/statusline plugin that shows your current code context
         'SmiteshP/nvim-navic',
+
+        --- A pretty diagnostics, references, telescope results, quickfix and location list to help you solve all the trouble your code is causing
+        {
+          'folke/trouble.nvim',
+          opts = {},
+          cmd = 'Trouble',
+          keys = {
+            {
+              '<leader>xx',
+              '<cmd>Trouble diagnostics toggle<cr>',
+              desc = 'Diagnostics (Trouble)',
+            },
+            {
+              '<leader>xX',
+              '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
+              desc = 'Buffer Diagnostics (Trouble)',
+            },
+            {
+              '<leader>cs',
+              '<cmd>Trouble symbols toggle focus=false<cr>',
+              desc = 'Symbols (Trouble)',
+            },
+            {
+              '<leader>cl',
+              '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+              desc = 'LSP Definitions / references / ... (Trouble)',
+            },
+            {
+              '<leader>xL',
+              '<cmd>Trouble loclist toggle<cr>',
+              desc = 'Location List (Trouble)',
+            },
+            {
+              '<leader>xQ',
+              '<cmd>Trouble qflist toggle<cr>',
+              desc = 'Quickfix List (Trouble)',
+            },
+          },
+        },
       },
       config = function()
         local fzf = require 'fzf-lua'
         local navic = require 'nvim-navic'
 
-        navic.setup {
-          highlight = true,
-          depth_limit = 8,
-        }
-
-        ---  This function gets run when an LSP attaches to a particular buffer.
-        ---    That is to say, every time a new file is opened that is associated with
-        ---    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
-        ---    function will be executed to configure the current buffer
+        --- This function gets run when an LSP attaches to a particular buffer.
+        ---   That is to say, every time a new file is opened that is associated with
+        ---   an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
+        ---   function will be executed to configure the current buffer
         vim.api.nvim_create_autocmd('LspAttach', {
           group = vim.api.nvim_create_augroup('lsp.attach', { clear = true }),
           callback = function(event)
-            -- NOTE: Remember that Lua is a real programming language, and as such it is possible
-            -- to define small helper and utility functions so you don't have to repeat yourself.
-            --
-            -- In this case, we create a function that lets us more easily define mappings specific
-            -- for LSP related items. It sets the mode, buffer and description for us each time.
+            --- NOTE: Remember that Lua is a real programming language, and as such it is possible
+            --- to define small helper and utility functions so you don't have to repeat yourself.
+            ---
+            --- In this case, we create a function that lets us more easily define mappings specific
+            --- for LSP related items. It sets the mode, buffer and description for us each time.
             local map = function(keys, func, desc, mode)
               mode = mode or 'n'
               vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
             end
 
-            -- Rename the variable under your cursor.
-            --  Most Language Servers support renaming across files, etc.
-            map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-            -- Execute a code action, usually your cursor needs to be on top of an error
-            -- or a suggestion from your LSP for this to activate.
-            map('<leader>ca', fzf.lsp_code_actions, '[C]ode [A]ction', { 'n', 'x' })
-
-            -- Find references for the word under your cursor.
-            -- map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-            --
-            -- -- Jump to the implementation of the word under your cursor.
-            -- --  Useful when your language has ways of declaring types without an actual implementation.
-            -- map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
-            --
-            -- -- Jump to the definition of the word under your cursor.
-            -- --  This is where a variable was first declared, or where a function is defined, etc.
-            -- --  To jump back, press <C-t>.
-            -- map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
-            --
-            -- -- WARN: This is not Goto Definition, this is Goto Declaration.
-            -- --  For example, in C this would take you to the header.
-            -- map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-            --
-            -- -- Fuzzy find all the symbols in your current document.
-            -- --  Symbols are things like variables, functions, types, etc.
-            -- map('gO', require('telescope.builtin').lsp_document_symbols, 'Open Document Symbols')
-            --
-            -- -- Fuzzy find all the symbols in your current workspace.
-            -- --  Similar to document symbols, except searches over your entire project.
-            -- map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
-            --
-            -- -- Jump to the type of the word under your cursor.
-            -- --  Useful when you're not sure what type a variable is and you want to see
-            -- --  the definition of its *type*, not where it was *defined*.
-            -- map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
-            --
+            --- Open LSP
             vim.keymap.set('n', 'K', function()
               vim.lsp.buf.hover {
                 border = vim.g.borders,
               }
             end, { buffer = event.buf })
 
+            --- Diagnostic and Fzf
+
+            --- Rename the variable under your cursor.
+            ---  Most Language Servers support renaming across files, etc.
+            map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+
+            --- Execute a code action, usually your cursor needs to be on top of an error
+            --- or a suggestion from your LSP for this to activate.
+            map('<leader>ca', fzf.lsp_code_actions, '[C]ode [A]ction', { 'n', 'x' })
+
+            --- Find references for the word under your cursor.
+            map('<leader>gr', fzf.lsp_references, '[G]oto [R]eferences')
+
+            --- Jump to the implementation of the word under your cursor.
+            ---  Useful when your language has ways of declaring types without an actual implementation.
+            map('<leader>gi', fzf.lsp_implementations, '[G]oto [I]mplementation')
+
+            --- Jump to the definition of the word under your cursor.
+            ---  This is where a variable was first declared, or where a function is defined, etc.
+            ---  To jump back, press <C-t>.
+            map('gd', fzf.lsp_definitions, '[G]oto [D]efinition')
+
+            --- WARN: This is not Goto Definition, this is Goto Declaration.
+            ---  For example, in C this would take you to the header.
+            map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
+            --- Jump to the type of the word under your cursor.
+            ---  Useful when you're not sure what type a variable is and you want to see
+            ---  the definition of its *type*, not where it was *defined*.
+            map('<leader>gt', fzf.lsp_typedefs, '[G]oto [T]ype Definition')
+
+            --- Trouble
+
             local client = vim.lsp.get_client_by_id(event.data.client_id)
-            -- if client.server_capabilities.documentSymbolProvider then
             if client then
               --- For nvim-navic to work, it needs attach to the lsp server.
               --- Can attach to only one server per buffer.
@@ -361,11 +652,14 @@ require('lazy').setup {
                 })
               end
 
-              -- The following code creates a keymap to toggle inlay hints in your
-              -- code, if the language server you are using supnorts them
-              --
-              -- This may be unwanted, since they displace some of your code
+              --- The following code creates a keymap to toggle inlay hints in your
+              --- code, if the language server you are using supnorts them
+              ---
+              --- This may be unwanted, since they displace some of your code
               if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+                --- Set inlay hints 'true' as default
+                vim.lsp.inlay_hint.enable(true)
+
                 map('<leader>th', function()
                   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
                 end, '[T]oggle Inlay [H]ints')
@@ -468,12 +762,6 @@ require('lazy').setup {
               --- certain features of an LSP (for example, turning off formatting for ts_ls)
               server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
 
-              ---@diagnostic disable: deprecated
-              server.handlers = {
-                ['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'single' }),
-                ['textDocument/signatureHelp'] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'single' }),
-              }
-
               require('lspconfig')[server_name].setup(server)
             end,
           },
@@ -499,9 +787,9 @@ require('lazy').setup {
       opts = {
         notify_on_error = false,
         format_on_save = function(bufnr)
-          -- Disable "format_on_save lsp_fallback" for languages that don't
-          -- have a well standardized coding style. You can add additional
-          -- languages here or re-enable it for the disabled ones.
+          --- Disable "format_on_save lsp_fallback" for languages that don't
+          --- have a well standardized coding style. You can add additional
+          --- languages here or re-enable it for the disabled ones.
           local disable_filetypes = { c = true, cpp = true }
           if disable_filetypes[vim.bo[bufnr].filetype] then
             return nil
@@ -559,6 +847,14 @@ require('lazy').setup {
           },
           opts = {},
         },
+        {
+          'zbirenbaum/copilot.lua',
+          cmd = 'Copilot',
+          event = 'InsertEnter',
+          config = function()
+            require('copilot').setup {}
+          end,
+        },
         'folke/lazydev.nvim',
       },
       ---@module 'blink.cmp'
@@ -599,11 +895,47 @@ require('lazy').setup {
         },
 
         completion = {
-          menu = { border = vim.g.borders },
+          menu = {
+            border = vim.g.borders,
+            draw = {
+              components = {
+                kind_icon = {
+                  text = function(ctx)
+                    --- Default kind icon
+                    local icon = ctx.kind_icon
+                    --- if LSP source, check for color derived from documentation
+                    if ctx.item.source_name == 'LSP' then
+                      local color_item = require('nvim-highlight-colors').format(ctx.item.documentation, { kind = ctx.kind })
+                      if color_item and color_item.abbr ~= '' then
+                        icon = color_item.abbr
+                      end
+                    end
+                    return icon .. ctx.icon_gap
+                  end,
+
+                  --- Use mini.icons highlight colors
+                  highlight = function(ctx)
+                    local _, hl, _ = require('mini.icons').get('lsp', ctx.kind)
+                    return hl
+                  end,
+                },
+                kind = {
+                  highlight = function(ctx)
+                    local _, hl, _ = require('mini.icons').get('lsp', ctx.kind)
+                    return hl
+                  end,
+                },
+              },
+            },
+          },
+
+          --- Display a preview of the selected item on the current line
+          ghost_text = { enabled = true },
+
           -- By default, you may press `<c-space>` to show the documentation.
           -- Optionally, set `auto_show = true` to show the documentation after a delay.
           documentation = {
-            auto_show = false,
+            auto_show = true,
             auto_show_delay_ms = 500,
             window = { border = vim.g.borders },
           },
@@ -642,13 +974,26 @@ require('lazy').setup {
       main = 'nvim-treesitter.configs', -- Sets main module to use for opts
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
       opts = {
-        ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+        ensure_installed = {
+          'bash',
+          'c',
+          'diff',
+          'html',
+          'lua',
+          'luadoc',
+          'nix',
+          'markdown',
+          'markdown_inline',
+          'query',
+          'vim',
+          'vimdoc',
+        },
         -- Autoinstall languages that are not installed
         auto_install = true,
         highlight = {
           enable = true,
           -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-          --  If you are experiencing weird indenting issues, add the language to
+          --  if you are experiencing weird indenting issues, add the language to
           --  the list of additional_vim_regex_highlighting and disabled languages for indent.
           additional_vim_regex_highlighting = { 'ruby' },
         },
