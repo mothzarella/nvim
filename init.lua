@@ -1,4 +1,4 @@
--- Bootstrap lazy.nvim
+--- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
@@ -14,8 +14,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end
 vim.opt.rtp:prepend(lazypath)
-
-vim.o.laststatus = 3
 
 --- Make sure to setup `mapleader` and `maplocalleader` before
 --- loading lazy.nvim so that mappings are correct.
@@ -35,84 +33,88 @@ vim.g.borders = {
   { ' ', 'FloatBorder' },
 }
 
-vim.o.termguicolors = true
+--- Options
+local o = vim.o
+
+--- Enable termgui color
+o.termguicolors = true
+
+o.laststatus = 3
 
 --- Make line numbers default
-vim.o.number = true
-vim.o.relativenumber = true
+o.number = true
+o.relativenumber = true
 
 --- Show which line your cursor is on
-vim.o.cursorline = true
+o.cursorline = true
 
 --- Enable break indent
-vim.o.breakindent = true
+o.breakindent = true
 
 --- Don't show the mode, since it's already in the status line
-vim.o.showmode = false
+o.showmode = false
 
 --- Save undo history
-vim.o.undofile = true
+o.undofile = true
 
 --- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
-vim.o.ignorecase = true
-vim.o.smartcase = true
+o.ignorecase = true
+o.smartcase = true
+
+--- Number of spaces to use for each step of (auto)indent
+local tabs = 2
+o.shiftwidth = tabs
+o.tabstop = tabs
+o.expandtab = true
+o.smartindent = true
 
 --- Keep signcolumn on by default
-vim.opt.signcolumn = 'yes'
+o.signcolumn = 'yes'
 
 --- Minimal number of screen lines to keep above and below the cursor.
-vim.o.scrolloff = 10
+o.scrolloff = 10
 
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+--- Remap
+local map = vim.keymap
 
-vim.keymap.set('n', '[b', '<cmd>bprev<CR>')
-vim.keymap.set('n', ']b', '<cmd>bnext<CR>')
+map.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
---- yank to system clipboard
-vim.keymap.set({ 'n', 'v' }, '<leader>y', [["+y]])
+map.set('n', '[b', '<cmd>bprev<CR>')
+map.set('n', ']b', '<cmd>bnext<CR>')
 
--- Setup lazy.nvim
+--- Yank to system clipboard
+map.set({ 'n', 'v' }, '<leader>y', [["+y]])
+
+--- Diagnostic keymaps
+map.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+--- Highlight when yanking (copying) text
+---  Try it with `yap` in normal mode
+---  See `:help vim.hl.on_yank()`
+vim.api.nvim_create_autocmd('TextYankPost', {
+  desc = 'Highlight when yanking (copying) text',
+  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+  callback = function()
+    vim.hl.on_yank()
+  end,
+})
+
+--- Setup lazy.nvim
 require('lazy').setup {
   spec = {
     {
-      'miroshQa/debugmaster.nvim',
-      dependencies = {
-        'mfussenegger/nvim-dap',
-        'jay-babu/mason-nvim-dap.nvim',
-        'leoluz/nvim-dap-go',
+      'rmagatti/auto-session',
+      lazy = false,
+
+      ---enables autocomplete for opts
+      ---@module "auto-session"
+      ---@type AutoSession.Config
+      opts = {
+        suppressed_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
+        -- log_level = 'debug',
       },
-      config = function()
-        local dm = require 'debugmaster'
-        local dap = require 'dap'
-
-        --- Remap
-        vim.keymap.set({ 'n', 'v' }, '<leader>d', dm.mode.toggle, { nowait = true })
-        vim.keymap.set('t', '<C-/>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
-        require('mason-nvim-dap').setup {
-          --- Makes a best effort to setup the various debuggers with
-          --- reasonable debug configurations
-          automatic_installation = true,
-
-          --- See mason-nvim-dap README for more information
-          handlers = {},
-
-          ensure_installed = {
-            'delve',
-          },
-        }
-
-        --- Install golang specific config
-        require('dap-go').setup {
-          delve = {
-            --- On Windows delve must be run attached or it crashes.
-            --- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
-            detached = vim.fn.has 'win32' == 0,
-          },
-        }
-      end,
     },
-    'tpope/vim-sleuth',
+    ---  Markdown
     {
       'OXY2DEV/markview.nvim',
       lazy = false,
@@ -120,6 +122,12 @@ require('lazy').setup {
       keys = {
         { '<leader>tm', '<cmd>Markview toggle<cr>', desc = '[T]oggle [M]arkdown' },
       },
+    },
+    {
+      'mbbill/undotree',
+      config = function()
+        vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = '[U]ndoo tree' })
+      end,
     },
     {
       'christoomey/vim-tmux-navigator',
@@ -165,128 +173,22 @@ require('lazy').setup {
           git_change = utils.get_highlight('diffChanged').fg,
         }
 
-        local Navic = {
-          condition = function()
-            return require('nvim-navic').is_available()
-          end,
-          static = {
-            --- Type highlight map
-            type_hl = {
-              File = 'Directory',
-              Module = '@include',
-              Namespace = '@namespace',
-              Package = '@include',
-              Class = '@structure',
-              Method = '@method',
-              Property = '@property',
-              Field = '@field',
-              Constructor = '@constructor',
-              Enum = '@field',
-              Interface = '@type',
-              Function = '@function',
-              Variable = '@variable',
-              Constant = '@constant',
-              String = '@string',
-              Number = '@number',
-              Boolean = '@boolean',
-              Array = '@field',
-              Object = '@type',
-              Key = '@keyword',
-              Null = '@comment',
-              EnumMember = '@field',
-              Struct = '@structure',
-              Event = '@keyword',
-              Operator = '@operator',
-              TypeParameter = '@type',
-            },
-            --- bit operation dark magic, see below...
-            enc = function(line, col, winnr)
-              return bit.bor(bit.lshift(line, 16), bit.lshift(col, 6), winnr)
-            end,
-            --- line: 16 bit (65535); col: 10 bit (1023); winnr: 6 bit (63)
-            dec = function(c)
-              local line = bit.rshift(c, 16)
-              local col = bit.band(bit.rshift(c, 6), 1023)
-              local winnr = bit.band(c, 63)
-              return line, col, winnr
-            end,
-          },
-          init = function(self)
-            local data = require('nvim-navic').get_data() or {}
-            local children = {}
-            --- create a child for each level
-            for i, d in ipairs(data) do
-              --- encode line and column numbers into a single integer
-              local pos = self.enc(d.scope.start.line, d.scope.start.character, self.winnr)
-              local child = {
-                {
-                  provider = d.icon,
-                  hl = self.type_hl[d.type],
-                },
-                {
-                  --- escape `%`s (elixir) and buggy default separators
-                  provider = d.name:gsub('%%', '%%%%'):gsub('%s*->%s*', ''),
-                  --- highlight icon only or location name as well
-                  --- hl = self.type_hl[d.type],
-
-                  on_click = {
-                    --- pass the encoded position through minwid
-                    minwid = pos,
-                    callback = function(_, minwid)
-                      --- decode
-                      local line, col, winnr = self.dec(minwid)
-                      vim.api.nvim_win_set_cursor(vim.fn.win_getid(winnr), { line, col })
-                    end,
-                    name = 'heirline_navic',
-                  },
-                },
-              }
-              --- add a separator only if needed
-              if #data > 1 and i < #data then
-                table.insert(child, {
-                  provider = ' > ',
-                  hl = { fg = 'bright_fg' },
-                })
-              end
-              table.insert(children, child)
-            end
-            --- instantiate the new child, overwriting the previous one
-            self.child = self:new(children, 1)
-          end,
-          --- evaluate the children containing navic components
-          provider = function(self)
-            return self.child:eval()
-          end,
-          hl = { fg = 'gray' },
-          update = 'CursorMoved',
-        }
-
-        local FileType = {
-          provider = function()
-            return ' ' .. string.upper(vim.bo.filetype) .. ' '
-          end,
-          hl = { fg = utils.get_highlight('Type').fg, bold = true },
-        }
-
-        local ScrollBar = {
-          static = { sbar = { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█' } },
-          { provider = ' %P ' },
-          {
-            provider = function(self)
-              local curr_line = vim.api.nvim_win_get_cursor(0)[1]
-              local lines = vim.api.nvim_buf_line_count(0)
-              local i = math.floor((curr_line - 1) / lines * #self.sbar) + 1
-              return string.rep(self.sbar[i], 2)
-            end,
-            hl = { fg = 'pink' },
-          },
-          { provider = ' ' },
-        }
+        local status = require 'tar.status'
 
         require('heirline').setup {
-          winbar = { Navic },
+          --- Components
+          ---@diagnostic disable-next-line: missing-fields
+          winbar = { status.Navic() },
 
-          statusline = { FileType, { provider = '%=' }, ScrollBar },
+          ---@diagnostic disable-next-line: missing-fields
+          statusline = {
+            status.FileType(utils),
+            status.Git(conditions),
+            { provider = '%=' },
+            status.ScrollBar(),
+          },
+
+          --- Options
           opts = {
             colors = colors,
             disable_winbar_cb = function(args)
@@ -323,7 +225,7 @@ require('lazy').setup {
 
             --- Float
             hl('Pmenu', { link = 'NormalFloat' })
-            hl('PmenuSbar', { link = 'NormalFloat' }) --- Better look Pmenu scroll
+            hl('PmenuSbar', { link = 'NormalFloat' }) --- Better look Pmenu & CMP scroll
 
             --- Winbar
             hl('Winbar', { bg = 'NONE' })
@@ -333,7 +235,7 @@ require('lazy').setup {
       end,
     },
 
-    --- explorer
+    --- Explorer
     {
       'stevearc/oil.nvim',
       lazy = false,
@@ -365,8 +267,8 @@ require('lazy').setup {
           },
           view_options = { show_hidden = true },
           float = {
-            max_width = 0.5,
-            max_height = 0.5,
+            max_width = 0.75,
+            max_height = 0.75,
             border = vim.g.borders,
           },
         }
@@ -388,7 +290,7 @@ require('lazy').setup {
       end,
     },
 
-    --- hl colors
+    --- Highlight colors
     {
       'brenoprata10/nvim-highlight-colors',
       opts = {
@@ -481,7 +383,21 @@ require('lazy').setup {
               vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'Fzf: ' .. desc })
             end
 
+            --- Buffer
+            map('<leader><leader>', fzf.buffers, '[F]ind [F]ile', { 'n', 'x' })
+
+            --- Comments
+            map('<leader>fc', function()
+              require('todo-comments.fzf').todo()
+            end, '[F]ind [C]comment', { 'n', 'x' })
+
+            --- File
             map('<leader>ff', fzf.files, '[F]ind [F]ile', { 'n', 'x' })
+
+            --- Session
+            map('<leader>fs', function()
+              fzf.fzf_exec 'SessionSearch'
+            end, 'Fuzzy complete file', { 'n' })
           end,
         })
       end,
@@ -516,45 +432,6 @@ require('lazy').setup {
 
         --- Simple winbar/statusline plugin that shows your current code context
         'SmiteshP/nvim-navic',
-
-        --- A pretty diagnostics, references, telescope results, quickfix and location list to help you solve all the trouble your code is causing
-        {
-          'folke/trouble.nvim',
-          opts = {},
-          cmd = 'Trouble',
-          keys = {
-            {
-              '<leader>xx',
-              '<cmd>Trouble diagnostics toggle<cr>',
-              desc = 'Diagnostics (Trouble)',
-            },
-            {
-              '<leader>xX',
-              '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
-              desc = 'Buffer Diagnostics (Trouble)',
-            },
-            {
-              '<leader>cs',
-              '<cmd>Trouble symbols toggle focus=false<cr>',
-              desc = 'Symbols (Trouble)',
-            },
-            {
-              '<leader>cl',
-              '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
-              desc = 'LSP Definitions / references / ... (Trouble)',
-            },
-            {
-              '<leader>xL',
-              '<cmd>Trouble loclist toggle<cr>',
-              desc = 'Location List (Trouble)',
-            },
-            {
-              '<leader>xQ',
-              '<cmd>Trouble qflist toggle<cr>',
-              desc = 'Quickfix List (Trouble)',
-            },
-          },
-        },
       },
       config = function()
         local fzf = require 'fzf-lua'
