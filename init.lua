@@ -33,6 +33,11 @@ vim.g.borders = {
   { ' ', 'FloatBorder' },
 }
 
+vim.api.nvim_create_autocmd('BufEnter', {
+  group = vim.api.nvim_create_augroup('buf.attach', { clear = true }),
+  callback = function(event) end,
+})
+
 --- Options
 local o = vim.o
 
@@ -102,19 +107,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 --- Setup lazy.nvim
 require('lazy').setup {
   spec = {
-    {
-      'rmagatti/auto-session',
-      lazy = false,
 
-      ---enables autocomplete for opts
-      ---@module "auto-session"
-      ---@type AutoSession.Config
-      opts = {
-        suppressed_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
-        -- log_level = 'debug',
-      },
-    },
+    --- Surround
+    --- Delete/change/add parentheses/quotes/XML-tags/much more with ease
+    'tpope/vim-surround',
+
     ---  Markdown
+    ---  A hackable markdown, Typst, latex, html(inline) & YAML previewer for Neovim
     {
       'OXY2DEV/markview.nvim',
       lazy = false,
@@ -123,8 +122,12 @@ require('lazy').setup {
         { '<leader>tm', '<cmd>Markview toggle<cr>', desc = '[T]oggle [M]arkdown' },
       },
     },
+
+    --- Undootree
+    --- The undo history visualizer for VIM
     {
       'mbbill/undotree',
+      event = 'VeryLazy',
       config = function()
         vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = '[U]ndoo tree' })
       end,
@@ -147,6 +150,9 @@ require('lazy').setup {
         { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
       },
     },
+
+    --- Heirline
+    --- Neovim Statusline plugin designed around recursive inheritance to be exceptionally fast and versatile
     {
       'rebelot/heirline.nvim',
       config = function()
@@ -202,7 +208,8 @@ require('lazy').setup {
       end,
     },
 
-    --- colorsheme
+    --- Colorsheme
+    --- Variation of the gruvbox theme with full support for treesitter
     {
       'luisiacc/gruvbox-baby',
       priority = 1000,
@@ -236,6 +243,7 @@ require('lazy').setup {
     },
 
     --- Explorer
+    --- Neovim file explorer: edit your filesystem like a buffer
     {
       'stevearc/oil.nvim',
       lazy = false,
@@ -277,9 +285,11 @@ require('lazy').setup {
       end,
     },
 
-    --- Git integration
+    --- Git
     { 'lewis6991/gitsigns.nvim', opts = {} },
 
+    --- Mini
+    --- Library of independent Lua modules improving overall Neovim experience with minimal effort
     {
       'echasnovski/mini.nvim',
       version = '*', --- Stable version
@@ -287,12 +297,17 @@ require('lazy').setup {
         --- Icons
         ---@see https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-icons.md
         require('mini.icons').setup()
+
+        --- Autopairs
+        --- @see https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pairs.md
+        require('mini.pairs').setup()
       end,
     },
 
     --- Highlight colors
     {
       'brenoprata10/nvim-highlight-colors',
+      event = 'VeryLazy',
       opts = {
         ---Render style
         ---@usage 'background'|'foreground'|'virtual'
@@ -344,9 +359,14 @@ require('lazy').setup {
     },
 
     --- Comments
-    { 'numToStr/Comment.nvim', opts = {} },
+    {
+      'numToStr/Comment.nvim',
+      event = 'VeryLazy',
+      opts = {},
+    },
     {
       'folke/todo-comments.nvim',
+      event = 'VeryLazy',
       dependencies = { 'nvim-lua/plenary.nvim' },
       opts = {},
     },
